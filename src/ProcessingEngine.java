@@ -1,7 +1,8 @@
 import javax.swing.*;
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.nio.file.*;
+import java.io.RandomAccessFile;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -13,9 +14,7 @@ public class ProcessingEngine {
     private static final HashMap<String, List<LogObject>> HostIndex = new HashMap<>();
     private static final TreeMap<Long, List<LogObject>> TimeIndex = new TreeMap<>();
 
-    // Windows ISO Log Pattern
     private static final Pattern LOG_PATTERN = Pattern.compile("^(\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}[^\\s]*)\\s+(\\S+)\\s+.*:\\s+(.*)$");
-
     private static final Path LOG_FILE = Paths.get("/var/log/windows_5141.log");
 
     public static void main(String[] args) {
@@ -26,57 +25,37 @@ public class ProcessingEngine {
             myGui.setHosts(HostIndex.keySet());
         });
 
-        Thread logThread = new Thread(() -> watchLogFile(LOG_FILE), "log-watcher");
+        Thread logThread = new Thread(() -> tailFile(LOG_FILE), "log-tail");
         logThread.setDaemon(true);
         logThread.start();
     }
 
-    private static void watchLogFile(Path file) {
-        long lastPosition = 0;
-
+    private static void tailFile(Path file) {
         try {
-            if (Files.exists(file)) {
-                try (BufferedReader reader = new BufferedReader(new FileReader(file.toFile()))) {
-                    String line;
-                    while ((line = reader.readLine()) != null) {
-                        parseAndProcess(line);
-                    }
-                }
-                lastPosition = Files.size(file);
-            }
-
-            while (true) {
-                long currentSize = Files.exists(file) ? Files.size(file) : 0;
-
-                if (currentSize < lastPosition) {
-                    // File was truncated/rotated; start over
-                    lastPosition = 0;
-                }
-
-                if (currentSize > lastPosition) {
-                    try (FileReader fr = new FileReader(file.toFile())) {
-                        long skipped = fr.skip(lastPosition);
-                        while (skipped < lastPosition) {
-                            long more = fr.skip(lastPosition - skipped);
-                            if (more <= 0) break;
-                            skipped += more;
-                        }
-
-                        try (BufferedReader reader = new BufferedReader(fr)) {
-                            String line;
-                            while ((line = reader.readLine()) != null) {
-                                parseAndProcess(line);
-                                scheduleGuiRefresh();
-                            }
-                        }
-                    }
-                    lastPosition = currentSize;
-                }
-
+            while (!Files.exists(file)) {
                 Thread.sleep(500);
             }
+
+            try (RandomAccessFile raf = new RandomAccessFile(file.toFile(), "r")) {
+                long position = raf.length();
+                raf.seek(position);
+
+                while (true) {
+                    String line = raf.readLine();
+
+                    if (line == null) {
+                        Thread.sleep(100);
+                        continue;
+                    }
+
+                    // RandomAccessFile reads bytes; this is usually fine for log files,
+                    // but if you need full UTF-8 safety, use a different reader strategy.
+                    parseAndProcess(line);
+                    scheduleGuiRefresh();
+                }
+            }
         } catch (Exception e) {
-            System.err.println("Log watcher stopped: " + e.getMessage());
+            System.err.println("Log tail stopped: " + e.getMessage());
         }
     }
 
@@ -105,8 +84,8 @@ public class ProcessingEngine {
                 LogObject logObject = new LogObject(epochTime, host, severity, msg);
                 TimeIndex.computeIfAbsent(epochTime, k -> new ArrayList<>()).add(logObject);
                 HostIndex.computeIfAbsent(host, k -> new ArrayList<>()).add(logObject);
-            } catch (Exception e) {
-                // Ignore silent parse errors
+            } catch (Exception ignored) {
+                // ignore parse errors
             }
         }
     }
