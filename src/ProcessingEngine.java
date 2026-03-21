@@ -15,6 +15,7 @@ import com.formdev.flatlaf.FlatDarkLaf;
 
 public class ProcessingEngine {
 
+    private static GUI myGui;
     private static HashMap<String, List<LogObject>> HostIndex = new HashMap<>();
     private static TreeMap<Long, List<LogObject>> TimeIndex = new TreeMap<>();
 
@@ -28,35 +29,31 @@ public class ProcessingEngine {
     // dude
     public static void main(String[] args) throws IOException {
 
-        System.out.println("Starting GUI...");
-
-        // This single line applies the FlatLaf dark theme!
+        // 1. Setup the Look and Feel first
         FlatDarkLaf.setup();
 
+        // 2. Launch GUI on the Event Dispatch Thread BEFORE the loop
+        // This allows the window to open while the main thread is busy reading logs
         SwingUtilities.invokeLater(() -> {
-            GUI myGui = new GUI();
-            // Pass the keys (Hostnames) from your HashMap into the GUI list
+            System.out.println("Launching Watch Dog UI...");
+            myGui = new GUI();
             myGui.setHosts(HostIndex.keySet());
         });
-        // Check if we are receiving a pipe or reading a test file
-        BufferedReader reader;
-        if (System.in.available() > 0 || args.length == 0) {
-            // This allows the 'pipe' from the terminal to work
-            reader = new BufferedReader(new InputStreamReader(System.in));
-            System.out.println("Watch Dog Engine: Listening to Live Stream...");
-        } else {
-            reader = new BufferedReader(new FileReader("src/test_logs.txt"));
-            System.out.println("Watch Dog Engine: Reading Test File...");
-        }
 
-        try {
+        // 3. Now start the infinite log-reading loop
+        // We use System.in to catch the piped data from 'tail -f'
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(System.in))) {
             String line;
+            System.out.println("Watch Dog Engine: Hooked into Live Pipe. Waiting for data...");
+
             while ((line = reader.readLine()) != null) {
                 parseAndProcess(line);
-                // Optional: System.out.println("Stream Catch: " + line);
+                myGui.setHosts(HostIndex.keySet());
+                // Optional: Print to console so you know the pipe is alive
+                // System.out.println("New Event: " + line);
             }
         } catch (Exception e) {
-            System.err.println("Stream interrupted: " + e.getMessage());
+            System.err.println("Pipe Interrupted: " + e.getMessage());
         }
     }
 
