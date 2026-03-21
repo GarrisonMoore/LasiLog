@@ -19,41 +19,34 @@ public class ProcessingEngine {
     private static HashMap<String, List<LogObject>> HostIndex = new HashMap<>();
     private static TreeMap<Long, List<LogObject>> TimeIndex = new TreeMap<>();
 
-    private static final Pattern LOG_PATTERN = Pattern.compile("^(\\S+\\s+\\d+\\s+\\d+:\\d+:\\d+)\\s+(\\S+)\\s+(\\S+):\\s+(.*)$");
+    private static final Pattern LOG_PATTERN = Pattern.compile("^(\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}[^\\s]*)\\s+(\\S+)\\s+.*:\\s+(.*)$");
 
     private static final DateTimeFormatter DATE_FORMATTER =
             DateTimeFormatter.ofPattern("MMM d HH:mm:ss", Locale.ENGLISH);
 
-    static Scanner scanner = new Scanner(System.in);
-
-    // dude
+    /// dude
     public static void main(String[] args) throws IOException {
-
-        // 1. Setup the Look and Feel first
         FlatDarkLaf.setup();
 
-        // 2. Launch GUI on the Event Dispatch Thread BEFORE the loop
-        // This allows the window to open while the main thread is busy reading logs
+        // 1. LAUNCH GUI FIRST - This is the "Thread" fix
         SwingUtilities.invokeLater(() -> {
-            System.out.println("Launching Watch Dog UI...");
             myGui = new GUI();
             myGui.setHosts(HostIndex.keySet());
         });
 
-        // 3. Now start the infinite log-reading loop
-        // We use System.in to catch the piped data from 'tail -f'
+        // 2. READ THE PIPE
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(System.in))) {
             String line;
-            System.out.println("Watch Dog Engine: Hooked into Live Pipe. Waiting for data...");
-
             while ((line = reader.readLine()) != null) {
                 parseAndProcess(line);
-                myGui.setHosts(HostIndex.keySet());
-                // Optional: Print to console so you know the pipe is alive
-                // System.out.println("New Event: " + line);
+
+                // 3. LIVE REFRESH - Update the UI as logs fly in
+                if (myGui != null) {
+                    myGui.setHosts(HostIndex.keySet());
+                }
             }
         } catch (Exception e) {
-            System.err.println("Pipe Interrupted: " + e.getMessage());
+            // Silently handle pipe close on exit
         }
     }
 
