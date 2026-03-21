@@ -10,6 +10,7 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.time.ZoneId;
+
 import com.formdev.flatlaf.FlatDarkLaf;
 
 public class ProcessingEngine {
@@ -26,29 +27,7 @@ public class ProcessingEngine {
 
     // dude
     public static void main(String[] args) throws IOException {
-            // Check if we are receiving a pipe or reading a test file
-            BufferedReader reader;
-            if (System.in.available() > 0 || args.length == 0) {
-                // This allows the 'pipe' from the terminal to work
-                reader = new BufferedReader(new InputStreamReader(System.in));
-                System.out.println("Watch Dog Engine: Listening to Live Stream...");
-            } else {
-                reader = new BufferedReader(new FileReader("src/test_logs.txt"));
-                System.out.println("Watch Dog Engine: Reading Test File...");
-            }
 
-            try {
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    parseAndProcess(line);
-                    // Optional: System.out.println("Stream Catch: " + line);
-                }
-            } catch (Exception e) {
-                System.err.println("Stream interrupted: " + e.getMessage());
-            }
-
-        // ... after the while loop finishes ...
-        // ... after the while loop finishes ...
         System.out.println("Starting GUI...");
 
         // This single line applies the FlatLaf dark theme!
@@ -59,24 +38,26 @@ public class ProcessingEngine {
             // Pass the keys (Hostnames) from your HashMap into the GUI list
             myGui.setHosts(HostIndex.keySet());
         });
+        // Check if we are receiving a pipe or reading a test file
+        BufferedReader reader;
+        if (System.in.available() > 0 || args.length == 0) {
+            // This allows the 'pipe' from the terminal to work
+            reader = new BufferedReader(new InputStreamReader(System.in));
+            System.out.println("Watch Dog Engine: Listening to Live Stream...");
+        } else {
+            reader = new BufferedReader(new FileReader("src/test_logs.txt"));
+            System.out.println("Watch Dog Engine: Reading Test File...");
+        }
 
-//        System.out.println("Watch Dog Terminal Active. Type 'stats', 'search <host>', or 'exit'");
-//        while (true) {
-//            String input = scanner.nextLine();
-//            if (input.equalsIgnoreCase("exit")) break;
-//
-//            if (input.equalsIgnoreCase("stats")) {
-//                displayStats();
-//            } else if (input.startsWith("search ")) {
-//                String query = input.substring(7); // Grabs everything after 'search '
-//                List<LogObject> results = HostIndex.get(query);
-//                if (results != null) {
-//                    results.forEach(System.out::println);
-//                } else {
-//                    System.out.println("No records for " + query);
-//                }
-//            }
-//        }
+        try {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                parseAndProcess(line);
+                // Optional: System.out.println("Stream Catch: " + line);
+            }
+        } catch (Exception e) {
+            System.err.println("Stream interrupted: " + e.getMessage());
+        }
     }
 
     private static void parseAndProcess(String rawLine) {
