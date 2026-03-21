@@ -1,5 +1,6 @@
 import javax.swing.*;
 import java.io.BufferedReader;
+import java.io.FileReader;
 import java.io.InputStreamReader;
 import java.util.*;
 import java.util.regex.Matcher;
@@ -26,14 +27,18 @@ public class ProcessingEngine {
 
         // 2. BACKGROUND THREAD FOR THE PIPE (Stops the freezing!)
         Thread logThread = new Thread(() -> {
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(System.in))) {
+            try (BufferedReader reader = new BufferedReader(new FileReader("/var/log/windows_5141.log"))){
+            //try (BufferedReader reader = new BufferedReader(new InputStreamReader(System.in))) {
                 String line;
                 while ((line = reader.readLine()) != null) {
                     parseAndProcess(line);
 
                     // 3. MUST update the GUI safely on the Event Dispatch Thread
                     if (myGui != null) {
-                        SwingUtilities.invokeLater(() -> myGui.setHosts(HostIndex.keySet()));
+                        SwingUtilities.invokeLater(() -> {
+                            myGui.setHosts(HostIndex.keySet());
+                            myGui.refreshDisplay(); // THIS creates the Live Tail effect!
+                        });
                     }
                 }
             } catch (Exception e) {

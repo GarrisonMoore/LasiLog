@@ -12,6 +12,8 @@ public class GUI extends JFrame {
     private final JList<String> hostList = new JList<>(listModel);
     private final JTextArea logDisplay = new JTextArea();
 
+    // 1. Move pivotBox here so the whole class can see it!
+    private final JComboBox<String> pivotBox = new JComboBox<>(new String[]{"Hostnames", "Severity", "Time Window"});
     public GUI() {
         setTitle("Watch Dog NOC - Phase 2");
         setSize(1000, 600);
@@ -35,8 +37,6 @@ public class GUI extends JFrame {
         searchField.setForeground(Color.WHITE);
 
         // Create the dropdown before using it
-        String[] pivots = {"Hostnames", "Severity", "Time Window"};
-        JComboBox<String> pivotBox = new JComboBox<>(pivots);
         pivotBox.setFont(new Font("Monospaced", Font.BOLD, 18));
 
         // Add a DocumentListener to the search field
@@ -86,45 +86,8 @@ public class GUI extends JFrame {
 
         // Selection Logic: fetch logs for the selected host
         hostList.addListSelectionListener(e -> {
-            if (e.getValueIsAdjusting()) return; // Ignore the mid-click event
-
-            String selected = hostList.getSelectedValue();
-            String currentPivot = (String) pivotBox.getSelectedItem();
-            if (selected == null) return;
-
-            List<LogObject> logs = new ArrayList<>();
-
-            // Logic based on the selected Pivot
-            switch (currentPivot) {
-                case "Hostnames":
-                    logs = ProcessingEngine.getLogsForHost(selected);
-                    break;
-
-                case "Severity":
-                    logs = ProcessingEngine.getLogsBySeverity(selected);
-                    break;
-
-                case "Time Window":
-                    int mins = 0;
-                    if (selected.equalsIgnoreCase("Last Hour")) {
-                        mins = 60; // Explicitly set 60 minutes
-                    } else {
-                        String numericOnly = selected.replaceAll("\\D+", "");
-                        if (!numericOnly.isEmpty()) {
-                            mins = Integer.parseInt(numericOnly);
-                        }
-                    }
-
-                    if (mins > 0) {
-                        logs = ProcessingEngine.getLogsByTime(mins);
-                    }
-                    break;
-            }
-
-            // Display the results
-            logDisplay.setText("");
-            for (LogObject log : logs) {
-                logDisplay.append(log.toString() + "\n");
+            if (!e.getValueIsAdjusting()) {
+                refreshDisplay();
             }
         });
 
@@ -199,13 +162,55 @@ public class GUI extends JFrame {
     }
 
     public void setHosts(Set<String> hosts) {
+        // Only update the sidebar if we are actually looking at Hostnames
+        if (!"Hostnames".equals(pivotBox.getSelectedItem())) return;
+
+        String currentSelection = hostList.getSelectedValue(); // Remember what was clicked
         listModel.clear();
         for (String h : hosts) {
             listModel.addElement(h);
         }
+
+        // Put the click back where it belongs
+        if (currentSelection != null && hosts.contains(currentSelection)) {
+            hostList.setSelectedValue(currentSelection, true);
+        }
     }
 
-    private void updateDisplay(String host) {
-        // Implementation for the next step...
+    // 2. Add this to the bottom of GUI.java
+    public void refreshDisplay() {
+        String selected = hostList.getSelectedValue();
+        if (selected == null) return; // Do nothing if nothing is clicked
+
+        String currentPivot = (String) pivotBox.getSelectedItem();
+        List<LogObject> logs = new ArrayList<>();
+
+        switch (currentPivot) {
+            case "Hostnames":
+                logs = ProcessingEngine.getLogsForHost(selected);
+                break;
+            case "Severity":
+                logs = ProcessingEngine.getLogsBySeverity(selected);
+                break;
+            case "Time Window":
+                int mins = 0;
+                if (selected.equalsIgnoreCase("Last Hour")) {
+                    mins = 60;
+                } else {
+                    String numericOnly = selected.replaceAll("\\D+", "");
+                    if (!numericOnly.isEmpty()) mins = Integer.parseInt(numericOnly);
+                }
+                if (mins > 0) logs = ProcessingEngine.getLogsByTime(mins);
+                break;
+        }
+
+        // Update the text area
+        logDisplay.setText("");
+        for (LogObject log : logs) {
+            logDisplay.append(log.toString() + "\n");
+        }
+
+        // Auto-scroll to the bottom like 'tail -f'
+        logDisplay.setCaretPosition(logDisplay.getDocument().getLength());
     }
 }
