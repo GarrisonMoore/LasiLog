@@ -33,6 +33,16 @@ public class LogObject {
     }
 
     public String toString() {
-        return timestamp + " " + source + " " + level + " " + message;
+        // CHANGE THIS:
+        // java.time.LocalDateTime date = java.time.LocalDateTime.ofEpochSecond(timestamp, 0, java.time.ZoneOffset.UTC);
+
+        // TO THIS:
+        java.time.LocalDateTime date = java.time.LocalDateTime.ofInstant(
+                java.time.Instant.ofEpochSecond(timestamp),
+                java.time.ZoneId.systemDefault()
+        );
+
+        java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        return "[" + date.format(formatter) + "] " + source + " | " + level + ": " + message;
     }
 }
