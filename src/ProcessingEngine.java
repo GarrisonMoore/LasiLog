@@ -25,18 +25,26 @@ public class ProcessingEngine {
     static Scanner scanner = new Scanner(System.in);
 
     public static void main(String[] args) throws IOException {
-        try (BufferedReader reader = new BufferedReader(new FileReader("src/test_logs.txt"))) {
-        //try (BufferedReader reader = new BufferedReader(new InputStreamReader(System.in))) {
-            String line;
-            System.out.println("Watch Dog Engine cranking over...");
-
-            while ((line = reader.readLine()) != null) {
-                parseAndProcess(line);
-                System.out.println("Processed: " + line);
+            // Check if we are receiving a pipe or reading a test file
+            BufferedReader reader;
+            if (System.in.available() > 0 || args.length == 0) {
+                // This allows the 'pipe' from the terminal to work
+                reader = new BufferedReader(new InputStreamReader(System.in));
+                System.out.println("Watch Dog Engine: Listening to Live Stream...");
+            } else {
+                reader = new BufferedReader(new FileReader("src/test_logs.txt"));
+                System.out.println("Watch Dog Engine: Reading Test File...");
             }
-        } catch (Exception e) {
-            System.out.println("Stream interrupted: " + e.getMessage());
-        }
+
+            try {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    parseAndProcess(line);
+                    // Optional: System.out.println("Stream Catch: " + line);
+                }
+            } catch (Exception e) {
+                System.err.println("Stream interrupted: " + e.getMessage());
+            }
 
         // ... after the while loop finishes ...
         // ... after the while loop finishes ...
