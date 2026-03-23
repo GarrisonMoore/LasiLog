@@ -33,10 +33,7 @@ public class LogObject {
     }
 
     public String toString() {
-        // CHANGE THIS:
-        // java.time.LocalDateTime date = java.time.LocalDateTime.ofEpochSecond(timestamp, 0, java.time.ZoneOffset.UTC);
 
-        // TO THIS:
         java.time.LocalDateTime date = java.time.LocalDateTime.ofInstant(
                 java.time.Instant.ofEpochSecond(timestamp),
                 java.time.ZoneId.systemDefault()

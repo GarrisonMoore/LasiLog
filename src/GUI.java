@@ -12,7 +12,6 @@ public class GUI extends JFrame {
     private final JList<String> hostList = new JList<>(listModel);
     private final JTextArea logDisplay = new JTextArea();
 
-    // 1. Move pivotBox here so the whole class can see it!
     private final JComboBox<String> pivotBox = new JComboBox<>(new String[]{"Hostnames", "Severity", "Time Window"});
     public GUI() {
         setTitle("Watch Dog NOC - Phase 2");
@@ -111,18 +110,13 @@ public class GUI extends JFrame {
             }
         });
 
-        // UI layout
-
         // --- UI LAYOUT & BORDERS ---
 
-        // 1. Stack the Top Bar (Dropdown on top, Search below)
-        // GridLayout(rows, columns, horizontalGap, verticalGap)
         JPanel topBar = new JPanel(new GridLayout(2, 1, 0, 8));
         topBar.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10)); // Padding around the edges
         topBar.add(pivotBox);
         topBar.add(searchField);
 
-        // 2. Create a standardized NOC Border style
         javax.swing.border.Border lineBorder = BorderFactory.createLineBorder(Color.DARK_GRAY, 2);
         Font borderFont = new Font("Monospaced", Font.BOLD, 14);
 
@@ -134,7 +128,6 @@ public class GUI extends JFrame {
                 javax.swing.border.TitledBorder.TOP,
                 borderFont, Color.LIGHT_GRAY));
 
-        // Wrap the text area in a ScrollPane and give it a Titled Border
         JScrollPane logScroll = new JScrollPane(logDisplay);
         logScroll.setBorder(BorderFactory.createTitledBorder(
                 lineBorder, " Log Stream Output ",
@@ -142,18 +135,15 @@ public class GUI extends JFrame {
                 javax.swing.border.TitledBorder.TOP,
                 borderFont, Color.LIGHT_GRAY));
 
-        // 3. Assemble the Sidebar
         JPanel sidePanel = new JPanel(new BorderLayout());
         sidePanel.setPreferredSize(new Dimension(300, 0)); // Slightly wider for the borders
         sidePanel.setBorder(BorderFactory.createEmptyBorder(0, 10, 10, 5)); // Left/Bottom margins
         sidePanel.add(listScroll, BorderLayout.CENTER);
 
-        // 4. Assemble the Main Center Panel (to add matching margins)
         JPanel centerPanel = new JPanel(new BorderLayout());
         centerPanel.setBorder(BorderFactory.createEmptyBorder(0, 5, 10, 10)); // Right/Bottom margins
         centerPanel.add(logScroll, BorderLayout.CENTER);
 
-        // 5. Add everything to the main JFrame
         add(topBar, BorderLayout.NORTH);
         add(sidePanel, BorderLayout.WEST);
         add(centerPanel, BorderLayout.CENTER);
@@ -162,7 +152,6 @@ public class GUI extends JFrame {
     }
 
     public void setHosts(Set<String> hosts) {
-        // Only update the sidebar if we are actually looking at Hostnames
         if (!"Hostnames".equals(pivotBox.getSelectedItem())) return;
 
         String currentSelection = hostList.getSelectedValue(); // Remember what was clicked
@@ -185,6 +174,7 @@ public class GUI extends JFrame {
         String currentPivot = (String) pivotBox.getSelectedItem();
         List<LogObject> logs = new ArrayList<>();
 
+        // Fetches logs matching selected pivot criteria
         switch (currentPivot) {
             case "Hostnames":
                 logs = ProcessingEngine.getLogsForHost(selected);
@@ -204,7 +194,6 @@ public class GUI extends JFrame {
                 break;
         }
 
-        // Update the text area
         logDisplay.setText("");
         for (LogObject log : logs) {
             logDisplay.append(log.toString() + "\n");

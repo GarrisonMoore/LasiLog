@@ -47,9 +47,6 @@ public class ProcessingEngine {
                         Thread.sleep(100);
                         continue;
                     }
-
-                    // RandomAccessFile reads bytes; this is usually fine for log files,
-                    // but if you need full UTF-8 safety, use a different reader strategy.
                     parseAndProcess(line);
                     scheduleGuiRefresh();
                 }
