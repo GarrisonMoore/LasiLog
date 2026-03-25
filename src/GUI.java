@@ -248,7 +248,7 @@ public class GUI extends JFrame {
             String message = log.getMessage();
 
             Style tsStyle = logDisplay.addStyle("timestamp", null);
-            StyleConstants.setForeground(tsStyle, Color.CYAN);
+            StyleConstants.setForeground(tsStyle, Color.GREEN);
 
             Style hostStyle = logDisplay.addStyle("host", null);
             StyleConstants.setForeground(hostStyle, Color.GREEN);
@@ -259,11 +259,11 @@ public class GUI extends JFrame {
             } else if ("WARN".equalsIgnoreCase(severity)) {
                 StyleConstants.setForeground(sevStyle, Color.YELLOW);
             } else {
-                StyleConstants.setForeground(sevStyle, Color.BLUE);
+                StyleConstants.setForeground(sevStyle, Color.CYAN);
             }
 
             Style catStyle = logDisplay.addStyle("category", null);
-            StyleConstants.setForeground(catStyle, Color.LIGHT_GRAY);
+            StyleConstants.setForeground(catStyle, Color.ORANGE);
 
             Style msgStyle = logDisplay.addStyle("message", null);
             StyleConstants.setForeground(msgStyle, Color.WHITE);
