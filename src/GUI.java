@@ -29,7 +29,7 @@ public class GUI extends JFrame {
     private final JTextPane selectedLogDisplay = new JTextPane();
     private final JTextPane liveLogDisplay = new JTextPane();
     private final JTabbedPane logTabs = new JTabbedPane();
-    private final JButton backButton = new JButton("← Back");
+    private final JButton backButton = new JButton("↩");
 
     private final JComboBox<String> pivotBox = new JComboBox<>(new String[]{"Hostnames", "Category", "Severity", "Time"});
 
@@ -61,15 +61,17 @@ public class GUI extends JFrame {
 
         pivotBox.setFont(new Font("Monospaced", Font.BOLD, 16));
 
-        backButton.setFont(new Font("Monospaced", Font.BOLD, 14));
+        backButton.setFont(new Font("Monospaced", Font.BOLD, 18));
+        backButton.setMargin(new Insets(0, 0, 0, 0));
+        backButton.setPreferredSize(new Dimension(30, 30));
         backButton.setFocusPainted(false);
-        backButton.setVisible(false);
+        backButton.setEnabled(false);
         backButton.addActionListener(e -> {
             if ("Time".equals(pivotBox.getSelectedItem())) {
                 if (browseMode == BrowseMode.TIMES) {
                     loadDays();
                     selectedDay = null;
-                    backButton.setVisible(false);
+                    backButton.setEnabled(false);
                     refreshDisplay();
                 }
             }
@@ -143,7 +145,7 @@ public class GUI extends JFrame {
             } else if ("Time".equals(selected)) {
                 loadDays();
             }
-            backButton.setVisible(false);
+            backButton.setEnabled(false);
             refreshDisplay();
         });
 
@@ -172,7 +174,9 @@ public class GUI extends JFrame {
         sidePanel.setBorder(BorderFactory.createEmptyBorder(0, 10, 10, 5));
 
         JPanel navHeader = new JPanel(new BorderLayout());
-        navHeader.add(backButton, BorderLayout.NORTH);
+        JPanel btnWrap = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+        btnWrap.add(backButton);
+        navHeader.add(btnWrap, BorderLayout.NORTH);
         navHeader.add(listScroll, BorderLayout.CENTER);
 
         sidePanel.add(navHeader, BorderLayout.CENTER);
@@ -214,7 +218,7 @@ public class GUI extends JFrame {
         for (LocalTime time : IndexingEngine.getAvailableTimes(day)) {
             listModel.addElement(time.toString().substring(0, 5));
         }
-        backButton.setVisible(true);
+        backButton.setEnabled(true);
     }
 
     public void setHosts(Set<String> hosts) {
