@@ -58,7 +58,7 @@ public class GUI extends JFrame {
                 listModel.clear();
 
                 if ("Hostnames".equals(currentPivot)) {
-                    for (String host : ProcessingEngine.getHostKeys()) {
+                    for (String host : IndexingEngine.getHostKeys()) {
                         if (host.toLowerCase().contains(query)) {
                             listModel.addElement(host);
                         }
@@ -96,7 +96,7 @@ public class GUI extends JFrame {
             listModel.clear();
 
             if ("Hostnames".equals(selected)) {
-                for (String host : ProcessingEngine.getHostKeys()) {
+                for (String host : IndexingEngine.getHostKeys()) {
                     listModel.addElement(host);
                 }
             } else if ("Severity".equals(selected)) {
@@ -177,10 +177,10 @@ public class GUI extends JFrame {
         // Fetches logs matching selected pivot criteria
         switch (currentPivot) {
             case "Hostnames":
-                logs = ProcessingEngine.getLogsForHost(selected);
+                logs = IndexingEngine.getLogsForHost(selected);
                 break;
             case "Severity":
-                logs = ProcessingEngine.getLogsBySeverity(selected);
+                logs = IndexingEngine.getLogsBySeverity(selected);
                 break;
             case "Time Window":
                 int mins = 0;
@@ -190,7 +190,7 @@ public class GUI extends JFrame {
                     String numericOnly = selected.replaceAll("\\D+", "");
                     if (!numericOnly.isEmpty()) mins = Integer.parseInt(numericOnly);
                 }
-                if (mins > 0) logs = ProcessingEngine.getLogsByTime(mins);
+                if (mins > 0) logs = IndexingEngine.getLogsByTime(mins);
                 break;
         }
 
