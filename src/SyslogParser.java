@@ -22,11 +22,19 @@ public class SyslogParser implements LogParser {
                 String msg = m.group(3);
 
                 String severity = "INFO";
+                String category = "UNCATEGORIZED";
                 String lowerMsg = msg.toLowerCase();
+                // categorize severities
                 if (lowerMsg.contains("fail") || lowerMsg.contains("error")) severity = "CRIT";
                 if (lowerMsg.contains("warn") || lowerMsg.contains("timeout")) severity = "WARN";
+                if (severity == "INFO") category = "UNCATEGORIZED";
+                // categorize logs
+                if (lowerMsg.contains("logon") || lowerMsg.contains("auth") || lowerMsg.contains("access") || lowerMsg.contains("request")) category = "AUTH EVENTS";
+                if (lowerMsg.contains("audit") || lowerMsg.contains("auditd")) category = "AUDIT";
+                if (lowerMsg.contains("group") || lowerMsg.contains("group policy")) category = "GROUP POLICY";
 
-                LogObject logObject = new LogObject(epochTime, host, severity, msg);
+
+                LogObject logObject = new LogObject(epochTime, host, severity, category, msg);
                 IndexingEngine.TimeIndex.computeIfAbsent(epochTime, k -> new ArrayList<>()).add(logObject);
                 IndexingEngine.HostIndex.computeIfAbsent(host, k -> new ArrayList<>()).add(logObject);
             } catch (Exception ignored) {

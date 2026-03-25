@@ -1,17 +1,19 @@
 import java.util.HashMap;
 
 public class LogObject {
-    private long timestamp;
-    private String source;
-    private String level;
-    private String message;
+    private final long timestamp;
+    private final String source;
+    private final String severity;
+    private final String category;
+    private final String message;
 
     private HashMap<String, Integer> SortedLogs = new HashMap<>();
 
-    public LogObject(long timestamp, String source, String level, String message) {
+    public LogObject(long timestamp, String source, String severity,String category, String message) {
         this.timestamp = timestamp;
         this.source = source;
-        this.level = level;
+        this.severity = severity;
+        this.category = category;
         this.message = message;
     }
 
@@ -24,8 +26,12 @@ public class LogObject {
         return source;
     }
 
-    public String getLevel() {
-        return level;
+    public String getSeverity() {
+        return severity;
+    }
+
+    public String getCategory() {
+        return category;
     }
 
     public String getMessage() {
@@ -40,6 +46,6 @@ public class LogObject {
         );
 
         java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-        return "[" + date.format(formatter) + "] " + source + " | " + level + ": " + message;
+        return "[" + date.format(formatter) + "] " + source + " | " + severity + " | "+category+" : " + message;
     }
 }

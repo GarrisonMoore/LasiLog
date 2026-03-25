@@ -13,6 +13,7 @@ public class GUI extends JFrame {
     private final JTextArea logDisplay = new JTextArea();
 
     private final JComboBox<String> pivotBox = new JComboBox<>(new String[]{"Hostnames", "Severity", "Time Window"});
+
     public GUI() {
         setTitle("Guard Dog NOC - In-memory Indexer and Datastore");
         setSize(1000, 600);
@@ -63,16 +64,14 @@ public class GUI extends JFrame {
                             listModel.addElement(host);
                         }
                     }
-                }
-                else if ("Severity".equals(currentPivot)) {
+                } else if ("Severity".equals(currentPivot)) {
                     String[] severities = {"INFO", "WARN", "CRIT"};
                     for (String sev : severities) {
                         if (sev.toLowerCase().contains(query)) {
                             listModel.addElement(sev);
                         }
                     }
-                }
-                else if ("Time Window".equals(currentPivot)) {
+                } else if ("Time Window".equals(currentPivot)) {
                     String[] windows = {"Last 5 Minutes", "Last 30 Minutes", "Last Hour"};
                     for (String window : windows) {
                         if (window.toLowerCase().contains(query)) {
@@ -174,10 +173,25 @@ public class GUI extends JFrame {
         String currentPivot = (String) pivotBox.getSelectedItem();
         List<LogObject> logs = new ArrayList<>();
 
+        // Preserve scroll positions before rewriting the text
+        JScrollPane scrollPane = (JScrollPane) SwingUtilities.getAncestorOfClass(JScrollPane.class, logDisplay);
+        int verticalValue;
+        int horizontalValue;
+        if (scrollPane != null) {
+            verticalValue = scrollPane.getVerticalScrollBar().getValue();
+            horizontalValue = scrollPane.getHorizontalScrollBar().getValue();
+        } else {
+            horizontalValue = -1;
+            verticalValue = -1;
+        }
+
         // Fetches logs matching selected pivot criteria
         switch (currentPivot) {
             case "Hostnames":
                 logs = IndexingEngine.getLogsForHost(selected);
+                break;
+            case "Category":
+                logs = IndexingEngine.getLogsByCategory(selected);
                 break;
             case "Severity":
                 logs = IndexingEngine.getLogsBySeverity(selected);
@@ -199,7 +213,12 @@ public class GUI extends JFrame {
             logDisplay.append(log.toString() + "\n");
         }
 
-        // Auto-scroll to the bottom like 'tail -f'
-        logDisplay.setCaretPosition(logDisplay.getDocument().getLength());
+        // Restore scroll position if the user was already browsing
+        if (scrollPane != null && verticalValue >= 0 && horizontalValue >= 0) {
+            SwingUtilities.invokeLater(() -> {
+                scrollPane.getVerticalScrollBar().setValue(verticalValue);
+                scrollPane.getHorizontalScrollBar().setValue(horizontalValue);
+            });
+        }
     }
 }

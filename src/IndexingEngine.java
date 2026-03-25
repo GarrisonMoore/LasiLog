@@ -1,4 +1,3 @@
-import javax.swing.*;
 import java.io.RandomAccessFile;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -42,10 +41,20 @@ public class IndexingEngine{
         List<LogObject> filtered = new ArrayList<>();
         for (List<LogObject> logList : TimeIndex.values()) {
             for (LogObject log : logList) {
-                if (log.getLevel().equalsIgnoreCase(level)) filtered.add(log);
+                if (log.getSeverity().equalsIgnoreCase(level)) filtered.add(log);
             }
         }
         return filtered;
+    }
+
+    public static List<LogObject> getLogsByCategory(String category) {
+        List<LogObject> categorizedLogs = new ArrayList<>();
+        for (List<LogObject> logList : TimeIndex.values()) {
+            for (LogObject log : logList) {
+                if (log.getCategory().equalsIgnoreCase(category)) categorizedLogs.add(log);
+            }
+        }
+        return categorizedLogs;
     }
 
     public static List<LogObject> getLogsByTime(int minutes) {
