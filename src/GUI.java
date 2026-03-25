@@ -14,9 +14,11 @@ public class GUI extends JFrame {
 
     private final JComboBox<String> pivotBox = new JComboBox<>(new String[]{"Hostnames","Category","Severity", "Time Window"});
 
+    private int lastRenderedCount = 0;
+
     public GUI() {
         setTitle("Guard Dog NOC - In-memory Indexer and Datastore");
-        setSize(1000, 600);
+        setSize(1500, 600);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
 
@@ -30,6 +32,8 @@ public class GUI extends JFrame {
         logDisplay.setBackground(Color.BLACK);
         logDisplay.setForeground(Color.WHITE);
         logDisplay.setEditable(false);
+        logDisplay.setLineWrap(false);
+        logDisplay.setWrapStyleWord(false);
 
         JTextField searchField = new JTextField();
         searchField.setFont(new Font("Monospaced", Font.BOLD, 16));
@@ -221,17 +225,16 @@ public class GUI extends JFrame {
                 break;
         }
 
-        logDisplay.setText("");
-        for (LogObject log : logs) {
-            logDisplay.append(log.toString() + "\n");
+        int startIndex = Math.min(lastRenderedCount, logs.size());
+
+        if (startIndex == 0) {
+            logDisplay.setText("");
         }
 
-        // Restore scroll position if the user was already browsing
-        if (scrollPane != null && verticalValue >= 0 && horizontalValue >= 0) {
-            SwingUtilities.invokeLater(() -> {
-                scrollPane.getVerticalScrollBar().setValue(verticalValue);
-                scrollPane.getHorizontalScrollBar().setValue(horizontalValue);
-            });
+        for (int i = startIndex; i < logs.size(); i++) {
+            logDisplay.append(logs.get(i).toString() + "\n");
         }
+
+        lastRenderedCount = logs.size();
     }
 }
