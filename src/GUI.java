@@ -190,18 +190,6 @@ public class GUI extends JFrame {
         String currentPivot = (String) pivotBox.getSelectedItem();
         List<LogObject> logs = new ArrayList<>();
 
-        // Preserve scroll positions before rewriting the text
-        JScrollPane scrollPane = (JScrollPane) SwingUtilities.getAncestorOfClass(JScrollPane.class, logDisplay);
-        int verticalValue;
-        int horizontalValue;
-        if (scrollPane != null) {
-            verticalValue = scrollPane.getVerticalScrollBar().getValue();
-            horizontalValue = scrollPane.getHorizontalScrollBar().getValue();
-        } else {
-            horizontalValue = -1;
-            verticalValue = -1;
-        }
-
         // Fetches logs matching selected pivot criteria
         switch (currentPivot) {
             case "Hostnames":
