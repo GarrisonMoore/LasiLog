@@ -242,19 +242,28 @@ public class GUI extends JFrame {
 
     private List<LogObject> searchByDateTime(String query) {
         try {
-            // format: yyyy-MM-dd HH:mm-HH:mm
+            query = query.trim();
+
+            // Example: "2026-03-24 18:00-19:00"
             String[] parts = query.split("\\s+");
-            if (parts.length != 2) return new ArrayList<>();
+            if (parts.length == 1) {
+                java.time.LocalDate day = java.time.LocalDate.parse(parts[0]);
+                return IndexingEngine.getLogsByDay(day);
+            }
 
-            java.time.LocalDate day = java.time.LocalDate.parse(parts[0]);
+            if (parts.length == 2) {
+                java.time.LocalDate day = java.time.LocalDate.parse(parts[0]);
 
-            String[] timeParts = parts[1].split("-");
-            if (timeParts.length != 2) return new ArrayList<>();
+                String[] timeParts = parts[1].split("-");
+                if (timeParts.length != 2) return new ArrayList<>();
 
-            java.time.LocalTime start = java.time.LocalTime.parse(timeParts[0]);
-            java.time.LocalTime end = java.time.LocalTime.parse(timeParts[1]);
+                java.time.LocalTime start = java.time.LocalTime.parse(timeParts[0]);
+                java.time.LocalTime end = java.time.LocalTime.parse(timeParts[1]);
 
-            return IndexingEngine.getLogsByDayAndTime(day, start, end);
+                return IndexingEngine.getLogsByDayAndTime(day, start, end);
+            }
+
+            return new ArrayList<>();
         } catch (Exception ignored) {
             return new ArrayList<>();
         }
