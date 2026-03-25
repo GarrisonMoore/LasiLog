@@ -1,0 +1,253 @@
+@startuml
+
+/' diagram meta data start
+config=StructureConfiguration;
+{
+  "projectClassification": {
+    "searchMode": "OpenProject", // OpenProject, AllProjects
+    "includedProjects": "",
+    "pathEndKeywords": "*.impl",
+    "isClientPath": "",
+    "isClientName": "",
+    "isTestPath": "",
+    "isTestName": "",
+    "isMappingPath": "",
+    "isMappingName": "",
+    "isDataAccessPath": "",
+    "isDataAccessName": "",
+    "isDataStructurePath": "",
+    "isDataStructureName": "",
+    "isInterfaceStructuresPath": "",
+    "isInterfaceStructuresName": "",
+    "isEntryPointPath": "",
+    "isEntryPointName": "",
+    "treatFinalFieldsAsMandatory": false
+  },
+  "graphRestriction": {
+    "classPackageExcludeFilter": "",
+    "classPackageIncludeFilter": "",
+    "classNameExcludeFilter": "",
+    "classNameIncludeFilter": "",
+    "methodNameExcludeFilter": "",
+    "methodNameIncludeFilter": "",
+    "removeByInheritance": "", // inheritance/annotation based filtering is done in a second step
+    "removeByAnnotation": "",
+    "removeByClassPackage": "", // cleanup the graph after inheritance/annotation based filtering is done
+    "removeByClassName": "",
+    "cutMappings": false,
+    "cutEnum": true,
+    "cutTests": true,
+    "cutClient": true,
+    "cutDataAccess": true,
+    "cutInterfaceStructures": true,
+    "cutDataStructures": true,
+    "cutGetterAndSetter": true,
+    "cutConstructors": true
+  },
+  "graphTraversal": {
+    "forwardDepth": 13,
+    "backwardDepth": 14,
+    "classPackageExcludeFilter": "",
+    "classPackageIncludeFilter": "",
+    "classNameExcludeFilter": "",
+    "classNameIncludeFilter": "",
+    "methodNameExcludeFilter": "",
+    "methodNameIncludeFilter": "",
+    "hideMappings": false,
+    "hideDataStructures": false,
+    "hidePrivateMethods": true,
+    "hideInterfaceCalls": true, // indirection: implementation -> interface (is hidden) -> implementation
+    "onlyShowApplicationEntryPoints": false, // root node is included
+    "useMethodCallsForStructureDiagram": "BothDirections" // ForwardOnly, BothDirections, No
+  },
+  "details": {
+    "aggregation": "GroupByClass", // ByClass, GroupByClass, None
+    "showClassGenericTypes": true,
+    "showMethods": true,
+    "showMethodParameterNames": true,
+    "showMethodParameterTypes": true,
+    "showMethodReturnType": true,
+    "showPackageLevels": 6,
+    "showDetailedClassStructure": true
+  },
+  "rootClass": "LogParser",
+  "extensionCallbackMethod": "" // qualified.class.name#methodName - signature: public static String method(String)
+}
+diagram meta data end '/
+
+
+
+digraph g {
+    rankdir="TB"
+    splines=polyline
+    
+
+'nodes 
+subgraph cluster_1577647186 { 
+   	label=IndexingEngine
+	labeljust=l
+	fillcolor="#ececec"
+	style=filled
+   
+   IndexingEngine1577647186[
+	label=<<TABLE BORDER="1" CELLBORDER="0" CELLPADDING="4" CELLSPACING="0">
+<TR><TD ALIGN="LEFT" >(C)IndexingEngine</TD></TR>
+<HR/>
+<TR><TD ALIGN="LEFT" >+ getAvailableTimes(day: LocalDate): Set&lt;LocalTime&gt;</TD></TR>
+<TR><TD ALIGN="LEFT" >+ getLogsByCategory(category: String): List&lt;LogObject&gt;</TD></TR>
+<TR><TD ALIGN="LEFT" >+ getLogsByDay(day: LocalDate): List&lt;LogObject&gt;</TD></TR>
+<TR><TD ALIGN="LEFT" >+ getLogsByDayAndTime(day: LocalDate, start: LocalTime, end: LocalTime): List&lt;LogObject&gt;</TD></TR>
+<TR><TD ALIGN="LEFT" >+ getLogsBySeverity(level: String): List&lt;LogObject&gt;</TD></TR>
+<TR><TD ALIGN="LEFT" >+ getLogsForHost(host: String): List&lt;LogObject&gt;</TD></TR>
+<TR><TD ALIGN="LEFT" ># tailFile(file: Path)</TD></TR>
+</TABLE>>
+	style=filled
+	margin=0
+	shape=plaintext
+	fillcolor="#FFFFFF"
+];
+} 
+
+subgraph cluster_165819510 { 
+   	label=SyslogParser
+	labeljust=l
+	fillcolor="#ececec"
+	style=filled
+   
+   SyslogParser165819510[
+	label=<<TABLE BORDER="1" CELLBORDER="0" CELLPADDING="4" CELLSPACING="0">
+<TR><TD ALIGN="LEFT" >(C)SyslogParser</TD></TR>
+<HR/>
+<TR><TD ALIGN="LEFT" >+ canParse(rawline: String): boolean</TD></TR>
+<TR><TD ALIGN="LEFT" >+ parse(rawline: String): LogObject</TD></TR>
+</TABLE>>
+	style=filled
+	margin=0
+	shape=plaintext
+	fillcolor="#FFFFFF"
+];
+} 
+
+subgraph cluster_2390489 { 
+   	label=Main
+	labeljust=l
+	fillcolor="#ececec"
+	style=filled
+   
+   Main2390489[
+	label=<<TABLE BORDER="1" CELLBORDER="0" CELLPADDING="4" CELLSPACING="0">
+<TR><TD ALIGN="LEFT" >(C)Main</TD></TR>
+<HR/>
+<TR><TD ALIGN="LEFT" >+ main(args: String[])</TD></TR>
+<TR><TD ALIGN="LEFT" >- scheduleGuiRefresh()</TD></TR>
+</TABLE>>
+	style=filled
+	margin=0
+	shape=plaintext
+	fillcolor="#FFFFFF"
+];
+} 
+
+subgraph cluster_442144669 { 
+   	label=LogParser
+	labeljust=l
+	fillcolor="#ececec"
+	style=filled
+   
+   LogParser442144669[
+	label=<<TABLE BORDER="1" CELLBORDER="0" CELLPADDING="4" CELLSPACING="0">
+<TR><TD ALIGN="LEFT" >(I)LogParser</TD></TR>
+<HR/>
+<TR><TD ALIGN="LEFT" >+ canParse(rawline: String): boolean</TD></TR>
+<TR><TD ALIGN="LEFT" >+ parse(rawline: String): LogObject</TD></TR>
+</TABLE>>
+	style=filled
+	margin=0
+	shape=plaintext
+	fillcolor="#F1E5FD"
+];
+} 
+
+subgraph cluster_470102141 { 
+   	label=LogObject
+	labeljust=l
+	fillcolor="#ececec"
+	style=filled
+   
+   LogObject470102141[
+	label=<<TABLE BORDER="1" CELLBORDER="0" CELLPADDING="4" CELLSPACING="0">
+<TR><TD ALIGN="LEFT" >(C)LogObject</TD></TR>
+<HR/>
+<TR><TD ALIGN="LEFT" >-   SortedLogs: HashMap&lt;String, Integer&gt; [0..*]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   category: String [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   message: String [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   severity: String [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   source: String [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   timestamp: long [1]</TD></TR>
+</TABLE>>
+	style=filled
+	margin=0
+	shape=plaintext
+	fillcolor="#FFFFFF"
+];
+} 
+
+subgraph cluster_70939 { 
+   	label=GUI
+	labeljust=l
+	fillcolor="#ececec"
+	style=filled
+   
+   GUI70939[
+	label=<<TABLE BORDER="1" CELLBORDER="0" CELLPADDING="4" CELLSPACING="0">
+<TR><TD ALIGN="LEFT" >(C)GUI</TD></TR>
+<HR/>
+<TR><TD ALIGN="LEFT" >-   ACCENT_COLOR: Color [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   BORDER_COLOR: Color [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   LIST_BG: Color [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   LOG_BG: Color [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   PANEL_BG: Color [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   backButton: JButton [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   browseMode: BrowseMode [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   hostList: JList&lt;String&gt; [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   lastRenderedCount: int [1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   lastSelectedKey: String [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   listModel: DefaultListModel&lt;String&gt; [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   liveLogDisplay: JTextPane [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   liveLogsBuffer: List&lt;LogObject&gt; [0..*]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   logSearchField: JTextField [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   logTabs: JTabbedPane [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   pivotBox: JComboBox&lt;String&gt; [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   searchField: JTextField [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   selectedDay: LocalDate [0..1]</TD></TR>
+<TR><TD ALIGN="LEFT" >-   selectedLogDisplay: JTextPane [0..1]</TD></TR>
+<HR/>
+<TR><TD ALIGN="LEFT" >- appendColoredLog(doc: StyledDocument, log: LogObject)</TD></TR>
+<TR><TD ALIGN="LEFT" >+ appendLiveLog(log: LogObject)</TD></TR>
+<TR><TD ALIGN="LEFT" >- applySidebarFilter()</TD></TR>
+<TR><TD ALIGN="LEFT" >- configureLogPane(pane: JTextPane, font: Font)</TD></TR>
+<TR><TD ALIGN="LEFT" >- formatTimestamp(log: LogObject): String</TD></TR>
+<TR><TD ALIGN="LEFT" >- loadDays()</TD></TR>
+<TR><TD ALIGN="LEFT" >- loadTimesForDay(day: LocalDate)</TD></TR>
+<TR><TD ALIGN="LEFT" >+ refreshDisplay()</TD></TR>
+<TR><TD ALIGN="LEFT" >- renderLogsToPane(pane: JTextPane, logs: List&lt;LogObject&gt;)</TD></TR>
+<TR><TD ALIGN="LEFT" >- triggerLogFilter()</TD></TR>
+</TABLE>>
+	style=filled
+	margin=0
+	shape=plaintext
+	fillcolor="#FFFFFF"
+];
+} 
+
+'edges    
+GUI70939 -> LogObject470102141[label="liveLogsBuffer
+[0..*]"];
+IndexingEngine1577647186 -> Main2390489[arrowhead=none, arrowtail=empty, dir=both];
+IndexingEngine1577647186 -> SyslogParser165819510[label="tailFile() -> parse()"];
+LogParser442144669 -> SyslogParser165819510[arrowhead=none, arrowtail=empty, dir=both];
+Main2390489 -> GUI70939[label="scheduleGuiRefresh() -> refreshDisplay()"];
+SyslogParser165819510 -> GUI70939[label="parse() -> appendLiveLog()"];
+    
+}
+@enduml

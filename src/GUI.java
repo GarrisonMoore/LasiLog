@@ -22,8 +22,6 @@ public class GUI extends JFrame {
         return myGui;
     }
 
-
-
     // A model used to manage and store a list of strings displayed in GUI components, such as JList.
     private final DefaultListModel<String> listModel = new DefaultListModel<>();
     // A graphical list component that displays a collection of hostnames or IPs
