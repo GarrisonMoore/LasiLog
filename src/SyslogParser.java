@@ -22,30 +22,55 @@ public class SyslogParser implements LogParser {
                 String msg = m.group(3);
 
                 String lowerMsg = msg.toLowerCase();
-                // throw away windows noise
-                if (lowerMsg.contains("The locale specific resource for the desired message is not present")) {
+
+                // throw away windows noise first
+                if (lowerMsg.contains("the locale specific resource for the desired message is not present")) {
                     return null;
                 }
 
                 // --- CATEGORIZATION ---
                 String severity = "INFO";
                 String category = "UNCATEGORIZED";
-                // categorize severities
-                if (lowerMsg.contains("fail") || lowerMsg.contains("error")) severity = "CRIT";
-                if (lowerMsg.contains("warn") || lowerMsg.contains("timeout")) severity = "WARN";
-                if (severity == "INFO") category = "UNCATEGORIZED";
-                // categorize logs
-                if (lowerMsg.contains("logon") || lowerMsg.contains("auth") || lowerMsg.contains("access") || lowerMsg.contains("request")) category = "AUTH EVENTS";
-                if (lowerMsg.contains("audit") || lowerMsg.contains("auditd")) category = "AUDIT";
-                if (lowerMsg.contains("group") || lowerMsg.contains("group policy")) category = "GROUP POLICY";
+
+                // Severities
+                if (lowerMsg.contains("fail") || lowerMsg.contains("error") || lowerMsg.contains("exception") || lowerMsg.contains("failed")) {
+                    severity = "CRIT";
+                    category = "ERRORS";
+                }
+                if (lowerMsg.contains("warn") || lowerMsg.contains("timeout") || lowerMsg.contains("warning") || lowerMsg.contains("blocked") || lowerMsg.contains("denied")) {
+                    severity = "WARN";
+                    category = "WARNINGS";
+                }
+
+                // Categories
+                if (lowerMsg.contains("failed") || lowerMsg.contains("failed to")) {
+                    category = "ERRORS";
+                }
+                if (lowerMsg.contains("logon") || lowerMsg.contains("auth") || lowerMsg.contains("access") || lowerMsg.contains("request")) {
+                    category = "AUTH EVENTS";
+                }
+                if (lowerMsg.contains("audit") || lowerMsg.contains("auditd")) {
+                    category = "AUDIT";
+                }
+                // GPO strings
+                if (lowerMsg.contains("group") || lowerMsg.contains("policy") || lowerMsg.contains(".local") || lowerMsg.contains("10.202.69.") || lowerMsg.contains("{")){
+                    category = "GROUP POLICY";
+                }
+                // extra GPO strings that are not caught by the above
+                if (lowerMsg.contains("kbps") || lowerMsg.contains("wallpaper") ) {
+                    category = "GROUP POLICY";
+                }
 
                 // create a new log object for any logs that fit the above categories
                 LogObject logObject = new LogObject(epochTime, host, severity, category, msg);
+
                 // compute time index and host index
                 IndexingEngine.TimeIndex.computeIfAbsent(epochTime, k -> new ArrayList<>()).add(logObject);
                 IndexingEngine.HostIndex.computeIfAbsent(host, k -> new ArrayList<>()).add(logObject);
-            } catch (Exception ignored) {
-                // ignore parse errors
+
+            } catch (Exception e) {
+                // Don't ignore parsing errors bruh
+                System.err.println("Error parsing log: " + e.getMessage());
             }
         }
         return null;
