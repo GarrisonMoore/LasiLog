@@ -30,6 +30,8 @@ public class GUI extends JFrame {
     private final JTextPane liveLogDisplay = new JTextPane();
     private final JTabbedPane logTabs = new JTabbedPane();
     private final JButton backButton = new JButton("↩");
+    private final JTextField logSearchField = new JTextField();
+    private final List<LogObject> liveLogsBuffer = Collections.synchronizedList(new ArrayList<>());
 
     private final Color ACCENT_COLOR = new Color(0, 150, 255); // Electric Blue
     private final Color PANEL_BG = new Color(25, 25, 25);
@@ -125,6 +127,11 @@ public class GUI extends JFrame {
         pivotBox.setFont(mainFont);
         pivotBox.putClientProperty("JComponent.outline", ACCENT_COLOR);
 
+        logSearchField.setFont(mainFont);
+        logSearchField.putClientProperty("JTextField.placeholderText", "Search within logs (e.g. error, 404)...");
+        logSearchField.putClientProperty("JComponent.outline", ACCENT_COLOR);
+        logSearchField.setPreferredSize(new Dimension(300, 35));
+
         backButton.setFont(new Font("Segoe UI Symbol", Font.PLAIN, 16));
         backButton.setPreferredSize(new Dimension(35, 35));
         backButton.setFocusPainted(false);
@@ -144,6 +151,12 @@ public class GUI extends JFrame {
             public void insertUpdate(DocumentEvent e) { applySidebarFilter(); }
             public void removeUpdate(DocumentEvent e) { applySidebarFilter(); }
             public void changedUpdate(DocumentEvent e) { applySidebarFilter(); }
+        });
+
+        logSearchField.getDocument().addDocumentListener(new DocumentListener() {
+            public void insertUpdate(DocumentEvent e) { triggerLogFilter(); }
+            public void removeUpdate(DocumentEvent e) { triggerLogFilter(); }
+            public void changedUpdate(DocumentEvent e) { triggerLogFilter(); }
         });
 
         hostList.addListSelectionListener(e -> {
@@ -211,8 +224,19 @@ public class GUI extends JFrame {
         JPanel centerPanel = new JPanel(new BorderLayout());
         centerPanel.setBorder(BorderFactory.createEmptyBorder(0, 10, 20, 20));
 
+        JPanel logHeader = new JPanel(new BorderLayout());
+        logHeader.setOpaque(false);
+        logHeader.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 0));
+
         logTabs.setBorder(null);
         logTabs.setOpaque(false);
+
+        // Place search bar to the right of the tab headers
+        JPanel logSearchWrap = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
+        logSearchWrap.setOpaque(false);
+        logSearchWrap.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 0));
+        logSearchWrap.add(logSearchField);
+        logTabs.putClientProperty("JTabbedPane.trailingComponent", logSearchWrap);
 
         JScrollPane selectedScroll = new JScrollPane(selectedLogDisplay);
         selectedScroll.setBorder(BorderFactory.createLineBorder(BORDER_COLOR, 1));
@@ -227,6 +251,7 @@ public class GUI extends JFrame {
         logTabs.addTab("SELECTED LOGS", selectedScroll);
         logTabs.addTab("LIVE FEED", liveScroll);
 
+        centerPanel.add(logHeader, BorderLayout.NORTH);
         centerPanel.add(logTabs, BorderLayout.CENTER);
 
         add(topBar, BorderLayout.NORTH);
@@ -264,6 +289,11 @@ public class GUI extends JFrame {
             listModel.addElement(time.toString().substring(0, 5));
         }
         backButton.setEnabled(true);
+    }
+
+    private void triggerLogFilter() {
+        refreshDisplay();
+        renderLogsToPane(liveLogDisplay, new ArrayList<>(liveLogsBuffer));
     }
 
     public void setHosts(Set<String> hosts) {
@@ -322,18 +352,28 @@ public class GUI extends JFrame {
     }
 
     public void appendLiveLog(LogObject log) {
+        liveLogsBuffer.add(log);
+        if (liveLogsBuffer.size() > 2000) {
+            liveLogsBuffer.remove(0);
+        }
         SwingUtilities.invokeLater(() -> {
-            StyledDocument doc = liveLogDisplay.getStyledDocument();
-            appendColoredLog(doc, log);
-            liveLogDisplay.setCaretPosition(doc.getLength());
+            String query = logSearchField.getText().trim().toLowerCase();
+            if (query.isEmpty() || log.getMessage().toLowerCase().contains(query)) {
+                StyledDocument doc = liveLogDisplay.getStyledDocument();
+                appendColoredLog(doc, log);
+                liveLogDisplay.setCaretPosition(doc.getLength());
+            }
         });
     }
 
     private void renderLogsToPane(JTextPane pane, List<LogObject> logs) {
         StyledDocument doc = pane.getStyledDocument();
         pane.setText("");
+        String query = logSearchField.getText().trim().toLowerCase();
         for (LogObject log : logs) {
-            appendColoredLog(doc, log);
+            if (query.isEmpty() || log.getMessage().toLowerCase().contains(query)) {
+                appendColoredLog(doc, log);
+            }
         }
     }
 
