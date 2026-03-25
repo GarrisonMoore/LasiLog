@@ -5,6 +5,7 @@ import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.Objects;
 
 /// bruh what
 public class GUI extends JFrame {
@@ -15,6 +16,8 @@ public class GUI extends JFrame {
     private final JComboBox<String> pivotBox = new JComboBox<>(new String[]{"Hostnames","Category","Severity", "Time Window"});
 
     private int lastRenderedCount = 0;
+
+    private String lastSelectedKey = null;
 
     public GUI() {
         setTitle("Guard Dog NOC - In-memory Indexer and Datastore");
@@ -96,6 +99,8 @@ public class GUI extends JFrame {
         // Selection Logic: fetch logs for the selected host
         hostList.addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting()) {
+                lastRenderedCount = 0;
+                lastSelectedKey = null;
                 refreshDisplay();
             }
         });
@@ -188,6 +193,14 @@ public class GUI extends JFrame {
         if (selected == null) return; // Do nothing if nothing is clicked
 
         String currentPivot = (String) pivotBox.getSelectedItem();
+        String selectionKey = currentPivot + "::" + selected;
+
+        if (!Objects.equals(lastSelectedKey, selectionKey)) {
+            lastRenderedCount = 0;
+            lastSelectedKey = selectionKey;
+            logDisplay.setText("");
+        }
+
         List<LogObject> logs = new ArrayList<>();
 
         // Fetches logs matching selected pivot criteria
@@ -213,14 +226,9 @@ public class GUI extends JFrame {
                 break;
         }
 
-        int startIndex = Math.min(lastRenderedCount, logs.size());
-
-        if (startIndex == 0) {
-            logDisplay.setText("");
-        }
-
-        for (int i = startIndex; i < logs.size(); i++) {
-            logDisplay.append(logs.get(i).toString() + "\n");
+        logDisplay.setText("");
+        for (LogObject log : logs) {
+            logDisplay.append(log.toString() + "\n");
         }
 
         lastRenderedCount = logs.size();

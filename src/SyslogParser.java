@@ -29,37 +29,30 @@ public class SyslogParser implements LogParser {
                 }
 
                 // --- CATEGORIZATION ---
-                String severity = "INFO";
-                String category = "UNCATEGORIZED";
+                String severity;
+                String category;
 
                 // Severities
                 if (lowerMsg.contains("fail") || lowerMsg.contains("error") || lowerMsg.contains("exception") || lowerMsg.contains("failed")) {
                     severity = "CRIT";
                     category = "ERRORS";
-                }
-                if (lowerMsg.contains("warn") || lowerMsg.contains("timeout") || lowerMsg.contains("warning") || lowerMsg.contains("blocked") || lowerMsg.contains("denied")) {
+                } else if (lowerMsg.contains("warn") || lowerMsg.contains("timeout") || lowerMsg.contains("warning") || lowerMsg.contains("blocked") || lowerMsg.contains("denied")) {
                     severity = "WARN";
                     category = "WARNINGS";
-                }
+                }else severity = "INFO";
 
                 // Categories
                 if (lowerMsg.contains("failed") || lowerMsg.contains("failed to")) {
                     category = "ERRORS";
-                }
-                if (lowerMsg.contains("logon") || lowerMsg.contains("auth") || lowerMsg.contains("access") || lowerMsg.contains("request")) {
+                } else if (lowerMsg.contains("logon") || lowerMsg.contains("auth") || lowerMsg.contains("access") || lowerMsg.contains("request")) {
                     category = "AUTH EVENTS";
-                }
-                if (lowerMsg.contains("audit") || lowerMsg.contains("auditd")) {
+                }else if (lowerMsg.contains("audit") || lowerMsg.contains("auditd")) {
                     category = "AUDIT";
-                }
-                // GPO strings
-                if (lowerMsg.contains("group") || lowerMsg.contains("policy") || lowerMsg.contains(".local") || lowerMsg.contains("10.202.69.") || lowerMsg.contains("{")){
+                } else if (lowerMsg.contains("group") || lowerMsg.contains("policy") || lowerMsg.contains(".local") || lowerMsg.contains("10.202.69.") || lowerMsg.contains("{")){
                     category = "GROUP POLICY";
-                }
-                // extra GPO strings that are not caught by the above
-                if (lowerMsg.contains("kbps") || lowerMsg.contains("wallpaper") ) {
+                }else if (lowerMsg.contains("kbps") || lowerMsg.contains("wallpaper") || lowerMsg.contains("wallpapers") || lowerMsg.contains("none")) {
                     category = "GROUP POLICY";
-                }
+                }else category = "UNCATEGORIZED";
 
                 // create a new log object for any logs that fit the above categories
                 LogObject logObject = new LogObject(epochTime, host, severity, category, msg);

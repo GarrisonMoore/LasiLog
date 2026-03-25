@@ -3,6 +3,7 @@ import com.formdev.flatlaf.FlatDarkLaf;
 import javax.swing.*;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Objects;
 
 public class Main extends IndexingEngine {
 
