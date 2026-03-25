@@ -39,13 +39,16 @@ public class SyslogParser implements LogParser {
                 if (lowerMsg.contains("fail") || lowerMsg.contains("error") || lowerMsg.contains("exception") || lowerMsg.contains("failed")) {
                     severity = "CRIT";
                     category = "ERRORS";
-                } else if (lowerMsg.contains("warn") || lowerMsg.contains("timeout") || lowerMsg.contains("warning") || lowerMsg.contains("blocked") || lowerMsg.contains("denied")) {
+                }
+                if (lowerMsg.contains("warn") || lowerMsg.contains("timeout") || lowerMsg.contains("warning") || lowerMsg.contains("blocked") || lowerMsg.contains("denied")) {
                     severity = "WARN";
                     category = "WARNINGS";
                 } else severity = "INFO";
 
                 // Categories
-                if (lowerMsg.contains("failed") || lowerMsg.contains("failed to")) {
+                if (lowerMsg.contains("warn") || lowerMsg.contains("timeout") || lowerMsg.contains("warning") || lowerMsg.contains("blocked") || lowerMsg.contains("denied")) {
+                    category = "WARNINGS";
+                }else if (lowerMsg.contains("fail") || lowerMsg.contains("error") || lowerMsg.contains("exception") || lowerMsg.contains("err")) {
                     category = "ERRORS";
                 } else if (lowerMsg.contains("logon") || lowerMsg.contains("auth") || lowerMsg.contains("access") || lowerMsg.contains("request")) {
                     category = "AUTH EVENTS";
