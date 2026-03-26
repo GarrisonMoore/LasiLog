@@ -7,6 +7,7 @@ import java.awt.Color;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+// adding comment for FORCE PUSH GITHUB PLEASE
 public class Main extends IndexingEngine {
 
     // Path to the Windows Event Log file
