@@ -2,14 +2,25 @@ import java.io.RandomAccessFile;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentSkipListMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 
 public class IndexingEngine{
 
-    // using a static HashMap to store the log objects
-    static final HashMap<String, List<LogObject>> HostIndex = new HashMap<>();
-    // using a static TreeMap to store the log objects by time
-    static final TreeMap<java.time.LocalDate, TreeMap<java.time.LocalTime, List<LogObject>>> TimeIndex = new TreeMap<>();
+    // using a static ConcurrentHashMap to store the log objects
+    static final ConcurrentHashMap<String, List<LogObject>> HostIndex = new ConcurrentHashMap<>();
+    // using a static ConcurrentSkipListMap to store the log objects by time
+    static final ConcurrentSkipListMap<java.time.LocalDate, ConcurrentSkipListMap<java.time.LocalTime, List<LogObject>>> TimeIndex = new ConcurrentSkipListMap<>();
+
+    // List of parsers to use
+    private static final List<LogParser> parsers = new ArrayList<>();
+
+    static {
+        parsers.add(new SyslogParser());
+        // Add other parsers here as needed
+    }
 
     // tail the log file in a separate thread
     static void tailFile(Path file) {
@@ -19,10 +30,9 @@ public class IndexingEngine{
                 Thread.sleep(500);
             }
 
-            // start reading from the end of the file
+            // start reading from the beginning of the file (as per previous issue fix)
             try (RandomAccessFile raf = new RandomAccessFile(file.toFile(), "r")) {
-                long position = raf.length();
-                raf.seek(position);
+                raf.seek(0);
                 // read the file line by line
                 while (true) {
                     String line = raf.readLine();
@@ -31,9 +41,23 @@ public class IndexingEngine{
                         Thread.sleep(100);
                         continue;
                     }
-                    // calling the parser to parse the log line
-                    SyslogParser parser = new SyslogParser();
-                    parser.parse(line);
+
+                    // Try each parser
+                    for (LogParser parser : parsers) {
+                        if (parser.canParse(line)) {
+                            LogObject log = parser.parse(line);
+                            if (log != null) {
+                                indexLog(log);
+                                // update GUI
+                                if (GUI.getMyGui() != null) {
+                                    GUI.getMyGui().appendLiveLog(log);
+                                }
+                                break; // Found a parser, move to next line
+                            }
+                        }
+                    }
+                    // Throttle to keep app responsive
+                    Thread.sleep(1);
                 }
             }
         } catch (Exception e) { // catch any exceptions that might occur
@@ -41,14 +65,38 @@ public class IndexingEngine{
         }
     }
 
+    private static void indexLog(LogObject logObject) {
+        try {
+            java.time.LocalDateTime dateTime = java.time.LocalDateTime.ofInstant(
+                    java.time.Instant.ofEpochSecond(logObject.getTimestamp()),
+                    java.time.ZoneId.systemDefault()
+            );
+            java.time.LocalDate day = dateTime.toLocalDate();
+            java.time.LocalTime time = dateTime.toLocalTime().withSecond(0).withNano(0);
+
+            // index by time
+            TimeIndex.computeIfAbsent(day, k -> new ConcurrentSkipListMap<>())
+                     .computeIfAbsent(time, k -> new CopyOnWriteArrayList<>())
+                     .add(logObject);
+
+            // index by host
+            HostIndex.computeIfAbsent(logObject.getSource(), k -> new CopyOnWriteArrayList<>())
+                     .add(logObject);
+        } catch (Exception e) {
+            System.err.println("Error indexing log: " + e.getMessage());
+        }
+    }
+
     // helper to get logs by severity
     public static List<LogObject> getLogsBySeverity(String level) {
         List<LogObject> filtered = new ArrayList<>();
-        for (TreeMap<java.time.LocalTime, List<LogObject>> byTime : TimeIndex.values()) {
+        for (ConcurrentSkipListMap<java.time.LocalTime, List<LogObject>> byTime : TimeIndex.values()) {
             for (List<LogObject> logList : byTime.values()) {
-                for (LogObject log : logList) {
-                    if (log.getSeverity().equalsIgnoreCase(level)) {
-                        filtered.add(log);
+                synchronized (logList) {
+                    for (LogObject log : logList) {
+                        if (log.getSeverity().equalsIgnoreCase(level)) {
+                            filtered.add(log);
+                        }
                     }
                 }
             }
@@ -59,11 +107,13 @@ public class IndexingEngine{
     // helper to get logs by category
     public static List<LogObject> getLogsByCategory(String category) {
         List<LogObject> categorizedLogs = new ArrayList<>();
-        for (TreeMap<java.time.LocalTime, List<LogObject>> byTime : TimeIndex.values()) {
+        for (ConcurrentSkipListMap<java.time.LocalTime, List<LogObject>> byTime : TimeIndex.values()) {
             for (List<LogObject> logList : byTime.values()) {
-                for (LogObject log : logList) {
-                    if (log.getCategory().equalsIgnoreCase(category)) {
-                        categorizedLogs.add(log);
+                synchronized (logList) {
+                    for (LogObject log : logList) {
+                        if (log.getCategory().equalsIgnoreCase(category)) {
+                            categorizedLogs.add(log);
+                        }
                     }
                 }
             }
@@ -74,7 +124,7 @@ public class IndexingEngine{
     // helper to get logs by day
     public static List<LogObject> getLogsByDay(java.time.LocalDate day) {
         List<LogObject> results = new ArrayList<>();
-        TreeMap<java.time.LocalTime, List<LogObject>> byTime = TimeIndex.get(day);
+        ConcurrentSkipListMap<java.time.LocalTime, List<LogObject>> byTime = TimeIndex.get(day);
         if (byTime != null) {
             for (List<LogObject> logs : byTime.values()) {
                 results.addAll(logs);
@@ -88,7 +138,7 @@ public class IndexingEngine{
                                                       java.time.LocalTime start,
                                                       java.time.LocalTime end) {
         List<LogObject> results = new ArrayList<>();
-        TreeMap<java.time.LocalTime, List<LogObject>> byTime = TimeIndex.get(day);
+        ConcurrentSkipListMap<java.time.LocalTime, List<LogObject>> byTime = TimeIndex.get(day);
         if (byTime != null) {
             for (List<LogObject> logs : byTime.subMap(start, true, end, true).values()) {
                 results.addAll(logs);
@@ -104,13 +154,13 @@ public class IndexingEngine{
 
     // helper to show available times for a given day
     public static Set<java.time.LocalTime> getAvailableTimes(java.time.LocalDate day) {
-        TreeMap<java.time.LocalTime, List<LogObject>> byTime = TimeIndex.get(day);
+        ConcurrentSkipListMap<java.time.LocalTime, List<LogObject>> byTime = TimeIndex.get(day);
         return byTime != null ? byTime.keySet() : Collections.emptySet();
     }
 
     // helper to get logs for a given host
     public static List<LogObject> getLogsForHost(String host) {
-        return HostIndex.getOrDefault(host, new ArrayList<>());
+        return HostIndex.getOrDefault(host, Collections.emptyList());
     }
 
     // helper to get available host keys

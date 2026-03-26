@@ -358,8 +358,8 @@ public class GUI extends JFrame {
                 } else if (browseMode == BrowseMode.TIMES && selectedDay != null) {
                     LocalTime time = LocalTime.parse(selected.length() == 5 ? selected + ":00" : selected);
                     logs = IndexingEngine.TimeIndex
-                            .getOrDefault(selectedDay, new java.util.TreeMap<>())
-                            .getOrDefault(time.withSecond(0).withNano(0), new ArrayList<>());
+                            .getOrDefault(selectedDay, new java.util.concurrent.ConcurrentSkipListMap<>())
+                            .getOrDefault(time.withSecond(0).withNano(0), new java.util.concurrent.CopyOnWriteArrayList<>());
                 }
                 break;
         }

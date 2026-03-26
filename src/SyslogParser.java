@@ -100,35 +100,6 @@ public class SyslogParser implements LogParser {
         }
 
         // create a new log object for any logs that fit the above categories
-        LogObject logObject = new LogObject(epochTime, host, severity, category, msg);
-
-        try {
-            // convert epoch time to local date and time
-            java.time.LocalDateTime dateTime = java.time.LocalDateTime.ofInstant(
-                    java.time.Instant.ofEpochSecond(epochTime),
-                    java.time.ZoneId.systemDefault()
-            );
-            java.time.LocalDate day = dateTime.toLocalDate();
-            java.time.LocalTime time = dateTime.toLocalTime().withSecond(0).withNano(0);
-
-            // compute time index
-            IndexingEngine.TimeIndex
-                    .computeIfAbsent(day, k -> new TreeMap<>())
-                    .computeIfAbsent(time, k -> new ArrayList<>())
-                    .add(logObject);
-
-            // append to live log display pane
-            if (GUI.getMyGui() != null) {
-                GUI.getMyGui().appendLiveLog(logObject);
-            }
-
-            // compute host index
-            IndexingEngine.HostIndex.computeIfAbsent(host, k -> new ArrayList<>()).add(logObject);
-
-        } catch (Exception e) {
-            // Don't ignore parsing errors bruh
-            System.err.println("Error indexing log: " + e.getMessage());
-        }
-        return logObject;
+        return new LogObject(epochTime, host, severity, category, msg);
     }
 }
