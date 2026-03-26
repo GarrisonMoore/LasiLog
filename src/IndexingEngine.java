@@ -19,9 +19,9 @@ public class IndexingEngine{
                 Thread.sleep(500);
             }
 
-            // start reading from the end of the file
+            // start reading from the beginning of the file to catch existing logs
             try (RandomAccessFile raf = new RandomAccessFile(file.toFile(), "r")) {
-                long position = raf.length();
+                long position = 0;
                 raf.seek(position);
                 // read the file line by line
                 while (true) {

@@ -1,3 +1,1 @@
-Mar 21 00:40:20 SR-SVR-01 WinEvt: [4624] Login Success: User=Garrison
-Mar 21 00:21:22 RANCH-GATE-PI auth: Failed password for invalid user admin
-Mar 21 00:00:20 DATSUN-GARAGE-PC system: Oil cooler sensor reporting offline
+2026-03-25T18:28:10.484262-07:00 COMPLAB-DC2.TwoDogLab.local Microsoft-Windows-WinRM[8148] WSMan operation EventDelivery completed successfully
