@@ -8,8 +8,8 @@ import java.util.Objects;
 
 public class Main extends IndexingEngine {
 
-    // Path to the Syslog Log file
-    private static final Path LOG_FILE = Paths.get("src/windows_5141.log");
+    // Path to the Windows Event Log file
+    private static final Path LOG_FILE = Paths.get("/var/log/windows_5141.log");
 
     public static void main(String[] args) throws InterruptedException {
         // Using FlatDarkLaf for a modern look
@@ -58,7 +58,6 @@ public class Main extends IndexingEngine {
                     g.setHosts(HostIndex.keySet());
                     g.refreshDisplay();
                 });
-                g.refreshLiveLogDisplay();
             }
         }).start();
     }

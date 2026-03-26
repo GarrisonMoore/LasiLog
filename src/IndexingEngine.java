@@ -7,9 +7,9 @@ import java.util.*;
 public class IndexingEngine{
 
     // using a static HashMap to store the log objects
-    static final Map<String, List<LogObject>> HostIndex = Collections.synchronizedMap(new HashMap<>());
+    static final HashMap<String, List<LogObject>> HostIndex = new HashMap<>();
     // using a static TreeMap to store the log objects by time
-    static final Map<java.time.LocalDate, TreeMap<java.time.LocalTime, List<LogObject>>> TimeIndex = Collections.synchronizedMap(new TreeMap<>());
+    static final TreeMap<java.time.LocalDate, TreeMap<java.time.LocalTime, List<LogObject>>> TimeIndex = new TreeMap<>();
 
     // tail the log file in a separate thread
     static void tailFile(Path file) {
@@ -19,11 +19,10 @@ public class IndexingEngine{
                 Thread.sleep(500);
             }
 
-            // start reading from the beginning of the file to catch existing logs
+            // start reading from the end of the file
             try (RandomAccessFile raf = new RandomAccessFile(file.toFile(), "r")) {
-                long position = 0;
+                long position = raf.length();
                 raf.seek(position);
-                int linesProcessed = 0;
                 // read the file line by line
                 while (true) {
                     String line = raf.readLine();
@@ -35,12 +34,6 @@ public class IndexingEngine{
                     // calling the parser to parse the log line
                     SyslogParser parser = new SyslogParser();
                     parser.parse(line);
-                    
-                    linesProcessed++;
-                    // Throttle if we are catching up on a huge file to keep app responsive
-                    if (linesProcessed % 1000 == 0) {
-                        Thread.sleep(10);
-                    }
                 }
             }
         } catch (Exception e) { // catch any exceptions that might occur
@@ -95,12 +88,10 @@ public class IndexingEngine{
                                                       java.time.LocalTime start,
                                                       java.time.LocalTime end) {
         List<LogObject> results = new ArrayList<>();
-        TreeMap<java.time.LocalTime, List<LogObject>> byTime = (TreeMap<java.time.LocalTime, List<LogObject>>) TimeIndex.get(day);
+        TreeMap<java.time.LocalTime, List<LogObject>> byTime = TimeIndex.get(day);
         if (byTime != null) {
-            synchronized (TimeIndex) {
-                for (List<LogObject> logs : byTime.subMap(start, true, end, true).values()) {
-                    results.addAll(logs);
-                }
+            for (List<LogObject> logs : byTime.subMap(start, true, end, true).values()) {
+                results.addAll(logs);
             }
         }
         return results;
