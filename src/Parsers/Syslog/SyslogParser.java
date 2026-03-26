@@ -6,7 +6,7 @@ import Interfaces.ParserMaster;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class SyslogParserMaster implements ParserMaster {
+public class SyslogParser implements ParserMaster {
 
     // RFC-5424 format Regex Tokenizer
     private static final Pattern RFC5424_PATTERN = Pattern.compile("^(\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}[^\\s]*)\\s+(\\S+)\\s+(?:.*:\\s+)?(.*)$");

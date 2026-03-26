@@ -1,7 +1,7 @@
 package SentryStack;
 
 import Interfaces.ParserMaster;
-import Parsers.Syslog.SyslogParserMaster;
+import Parsers.Syslog.SyslogParser;
 
 import java.io.RandomAccessFile;
 import java.nio.file.Files;
@@ -23,7 +23,7 @@ public class IndexingEngine{
     private static final List<ParserMaster> parsers = new ArrayList<>();
 
     static {
-        parsers.add(new SyslogParserMaster());
+        parsers.add(new SyslogParser());
         // Add other parsers here as needed
     }
 
