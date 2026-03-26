@@ -1,3 +1,5 @@
+package SentryStack;
+
 public class LogObject {
     private final long timestamp;
     private final String source;

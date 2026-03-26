@@ -1,11 +1,13 @@
+package SentryStack;
+
 import com.formdev.flatlaf.FlatDarkLaf;
 
 import javax.swing.*;
 import java.awt.Color;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Objects;
 
+// adding comment for FORCE PUSH GITHUB PLEASE
 public class Main extends IndexingEngine {
 
     // Path to the Windows Event Log file
@@ -52,7 +54,7 @@ public class Main extends IndexingEngine {
         scheduleGuiRefresh();
     }
 
-    // Schedule a GUI refresh every 500ms
+    // Schedule a SentryStack.GUI refresh every 500ms
     private static void scheduleGuiRefresh() {
         new javax.swing.Timer(500, e -> {
             GUI g = GUI.getMyGui();

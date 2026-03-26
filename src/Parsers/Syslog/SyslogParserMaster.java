@@ -1,9 +1,12 @@
-import java.util.ArrayList;
-import java.util.TreeMap;
+package Parsers.Syslog;
+
+import SentryStack.LogObject;
+import Interfaces.ParserMaster;
+
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class SyslogParser implements LogParser {
+public class SyslogParserMaster implements ParserMaster {
 
     // RFC-5424 format Regex Tokenizer
     private static final Pattern RFC5424_PATTERN = Pattern.compile("^(\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}[^\\s]*)\\s+(\\S+)\\s+(?:.*:\\s+)?(.*)$");
@@ -16,14 +19,14 @@ public class SyslogParser implements LogParser {
             .parseDefaulting(java.time.temporal.ChronoField.YEAR, java.time.LocalDate.now().getYear())
             .toFormatter(java.util.Locale.ENGLISH);
 
-    // override the canParse method in the LogParser interface (do this for any new parser)
+    // override the canParse method in the Interfaces.LogParser interface (do this for any new parser)
     @Override
     public boolean canParse(String rawline) {
         // make sure the line matches the RFC-5424 format
         return rawline.matches("^\\d{4}-\\d{2}.*") || rawline.matches("^[A-Z][a-z]{2}\\s+\\d{1,2}\\s+\\d{2}:\\d{2}:\\d{2}.*");
     }
 
-    // override the parse method in the LogParser interface (do this for any new parser)
+    // override the parse method in the Interfaces.LogParser interface (do this for any new parser)
     // parse the line using the RFC-5424 and BSD format
     @Override
     public LogObject parse(String rawline) {
@@ -84,55 +87,22 @@ public class SyslogParser implements LogParser {
 
         // Categories
         if (category.equals("UNCATEGORIZED")) {
-            if (lowerMsg.contains("warn") || lowerMsg.contains("timeout") || lowerMsg.contains("warning")
-                    || lowerMsg.contains("blocked") || lowerMsg.contains("denied")) {
+            if (lowerMsg.contains("warn") || lowerMsg.contains("timeout") || lowerMsg.contains("warning") || lowerMsg.contains("blocked") || lowerMsg.contains("denied")) {
                 category = "WARNINGS";
-            } else if (lowerMsg.contains("logon") || lowerMsg.contains("auth") || lowerMsg.contains("access")
-                    || lowerMsg.contains("request") || lowerMsg.contains("login")) {
+            } else if (lowerMsg.contains("logon") || lowerMsg.contains("auth") || lowerMsg.contains("access") || lowerMsg.contains("request") || lowerMsg.contains("login")) {
                 category = "AUTH EVENTS";
             } else if (lowerMsg.contains("audit") || lowerMsg.contains("auditd")) {
                 category = "AUDIT";
-            } else if (lowerMsg.contains("group") || lowerMsg.contains("policy") || lowerMsg.contains(".local") ||
-                    lowerMsg.contains("10.202.69.") || lowerMsg.contains("{") || lowerMsg.contains("kbps") ||
-                    lowerMsg.contains("wallpaper") || lowerMsg.contains("wallpapers") || lowerMsg.contains("none")) {
+            } else if (lowerMsg.contains("group") || lowerMsg.contains("policy") || lowerMsg.contains(".local") || lowerMsg.contains("10.202.69.") || lowerMsg.contains("{")) {
                 category = "GROUP POLICY";
-            }else if (lowerMsg.contains("winrm") || lowerMsg.contains("powershell") || lowerMsg.contains("command") ||
-                    lowerMsg.contains("task") || lowerMsg.contains("service") || lowerMsg.contains("server") ||
-            lowerMsg.contains("remote") || lowerMsg.contains("management") || lowerMsg.contains("remote management")) {
+            } else if (lowerMsg.contains("kbps") || lowerMsg.contains("wallpaper") || lowerMsg.contains("wallpapers") || lowerMsg.contains("none")) {
+                category = "GROUP POLICY";
+            }else if (lowerMsg.contains("winrm") || lowerMsg.contains("service") || lowerMsg.contains("remote") || lowerMsg.contains("management")) {
                 category = "REMOTE MANAGEMENT";
             }
         }
 
         // create a new log object for any logs that fit the above categories
-        LogObject logObject = new LogObject(epochTime, host, severity, category, msg);
-
-        try {
-            // convert epoch time to local date and time
-            java.time.LocalDateTime dateTime = java.time.LocalDateTime.ofInstant(
-                    java.time.Instant.ofEpochSecond(epochTime),
-                    java.time.ZoneId.systemDefault()
-            );
-            java.time.LocalDate day = dateTime.toLocalDate();
-            java.time.LocalTime time = dateTime.toLocalTime().withSecond(0).withNano(0);
-
-            // compute time index
-            IndexingEngine.TimeIndex
-                    .computeIfAbsent(day, k -> new TreeMap<>())
-                    .computeIfAbsent(time, k -> new ArrayList<>())
-                    .add(logObject);
-
-            // append to live log display pane
-            if (GUI.getMyGui() != null) {
-                GUI.getMyGui().appendLiveLog(logObject);
-            }
-
-            // compute host index
-            IndexingEngine.HostIndex.computeIfAbsent(host, k -> new ArrayList<>()).add(logObject);
-
-        } catch (Exception e) {
-            // Don't ignore parsing errors bruh
-            System.err.println("Error indexing log: " + e.getMessage());
-        }
-        return logObject;
+        return new LogObject(epochTime, host, severity, category, msg);
     }
 }

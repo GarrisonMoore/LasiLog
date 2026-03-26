@@ -1,3 +1,5 @@
+package SentryStack;
+
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
@@ -22,26 +24,26 @@ public class GUI extends JFrame {
         return myGui;
     }
 
-    // A model used to manage and store a list of strings displayed in GUI components, such as JList.
+    // A model used to manage and store a list of strings displayed in SentryStack.GUI components, such as JList.
     private final DefaultListModel<String> listModel = new DefaultListModel<>();
     // A graphical list component that displays a collection of hostnames or IPs
     private final JList<String> hostList = new JList<>(listModel);
-    // A JTextPane component used to display the currently selected log entry in the GUI.
+    // A JTextPane component used to display the currently selected log entry in the SentryStack.GUI.
     private final JTextPane selectedLogDisplay = new JTextPane();
-    // Represents a text pane component within the GUI for displaying live log updates.
+    // Represents a text pane component within the SentryStack.GUI for displaying live log updates.
     private final JTextPane liveLogDisplay = new JTextPane();
     // A JScrollPane component for the live log display.
     private final JScrollPane liveScroll = new JScrollPane(liveLogDisplay);
     // A tabbed pane used to display logs in different categories or views.
     private final JTabbedPane logTabs = new JTabbedPane();
-    // Represents a button used for navigating back within the GUI.
+    // Represents a button used for navigating back within the SentryStack.GUI.
     private final JButton backButton = new JButton("↩");
     // A text field used to input and search logs based on user-provided criteria.
     private final JTextField logSearchField = new JTextField();
-    // Holds a list of live log entries currently being buffered in the GUI.
+    // Holds a list of live log entries currently being buffered in the SentryStack.GUI.
     private final List<LogObject> liveLogsBuffer = Collections.synchronizedList(new ArrayList<>());
 
-    // Colors for GUI
+    // Colors for SentryStack.GUI
     private final Color ACCENT_COLOR = new Color(0, 150, 255); // Electric Blue
     private final Color PANEL_BG = new Color(25, 25, 25);
     private final Color LOG_BG = new Color(15, 15, 15);
@@ -97,7 +99,7 @@ public class GUI extends JFrame {
         }
     }
 
-    // GUI constructor
+    // SentryStack.GUI constructor
     public GUI() {
         setTitle("Guard Dog Processor - Log Management Console");
         setSize(1300, 850);
@@ -359,8 +361,8 @@ public class GUI extends JFrame {
                 } else if (browseMode == BrowseMode.TIMES && selectedDay != null) {
                     LocalTime time = LocalTime.parse(selected.length() == 5 ? selected + ":00" : selected);
                     logs = IndexingEngine.TimeIndex
-                            .getOrDefault(selectedDay, new java.util.TreeMap<>())
-                            .getOrDefault(time.withSecond(0).withNano(0), new ArrayList<>());
+                            .getOrDefault(selectedDay, new java.util.concurrent.ConcurrentSkipListMap<>())
+                            .getOrDefault(time.withSecond(0).withNano(0), new java.util.concurrent.CopyOnWriteArrayList<>());
                 }
                 break;
         }
