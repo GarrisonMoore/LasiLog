@@ -1,3 +1,8 @@
+package SentryStack;
+
+import Interfaces.ParserMaster;
+import Parsers.Syslog.SyslogParserMaster;
+
 import java.io.RandomAccessFile;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -15,10 +20,10 @@ public class IndexingEngine{
     static final ConcurrentSkipListMap<java.time.LocalDate, ConcurrentSkipListMap<java.time.LocalTime, List<LogObject>>> TimeIndex = new ConcurrentSkipListMap<>();
 
     // List of parsers to use
-    private static final List<LogParser> parsers = new ArrayList<>();
+    private static final List<ParserMaster> parsers = new ArrayList<>();
 
     static {
-        parsers.add(new SyslogParser());
+        parsers.add(new SyslogParserMaster());
         // Add other parsers here as needed
     }
 
@@ -47,12 +52,12 @@ public class IndexingEngine{
                     }
 
                     // Try each parser
-                    for (LogParser parser : parsers) {
+                    for (ParserMaster parser : parsers) {
                         if (parser.canParse(line)) {
                             LogObject log = parser.parse(line);
                             if (log != null) {
                                 indexLog(log);
-                                // update GUI
+                                // update SentryStack.GUI
                                 if (GUI.getMyGui() != null) {
                                     GUI.getMyGui().appendLiveLog(log);
                                 }

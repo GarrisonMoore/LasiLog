@@ -1,10 +1,12 @@
+package SentryStack;
+
 import javax.swing.*;
 import java.awt.*;
 
 
 public class ReadmeGUI {
 
-    // Colors for GUI
+    // Colors for SentryStack.GUI
     private final Color ACCENT_COLOR = new Color(0, 150, 255); // Electric Blue
     private final Color PANEL_BG = new Color(25, 25, 25);
     private final Color LOG_BG = new Color(15, 15, 15);
@@ -16,7 +18,7 @@ public class ReadmeGUI {
 
     private final JButton closeButton = new JButton("Close");
 
-    private static ReadmeGUI GUI;
+    private ReadmeGUI GUI;
 
     public ReadmeGUI() {
 

@@ -1,9 +1,12 @@
-import java.util.ArrayList;
-import java.util.TreeMap;
+package Parsers.Syslog;
+
+import SentryStack.LogObject;
+import Interfaces.ParserMaster;
+
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class SyslogParser implements LogParser {
+public class SyslogParserMaster implements ParserMaster {
 
     // RFC-5424 format Regex Tokenizer
     private static final Pattern RFC5424_PATTERN = Pattern.compile("^(\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}[^\\s]*)\\s+(\\S+)\\s+(?:.*:\\s+)?(.*)$");
@@ -16,14 +19,14 @@ public class SyslogParser implements LogParser {
             .parseDefaulting(java.time.temporal.ChronoField.YEAR, java.time.LocalDate.now().getYear())
             .toFormatter(java.util.Locale.ENGLISH);
 
-    // override the canParse method in the LogParser interface (do this for any new parser)
+    // override the canParse method in the Interfaces.LogParser interface (do this for any new parser)
     @Override
     public boolean canParse(String rawline) {
         // make sure the line matches the RFC-5424 format
         return rawline.matches("^\\d{4}-\\d{2}.*") || rawline.matches("^[A-Z][a-z]{2}\\s+\\d{1,2}\\s+\\d{2}:\\d{2}:\\d{2}.*");
     }
 
-    // override the parse method in the LogParser interface (do this for any new parser)
+    // override the parse method in the Interfaces.LogParser interface (do this for any new parser)
     // parse the line using the RFC-5424 and BSD format
     @Override
     public LogObject parse(String rawline) {
