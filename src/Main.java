@@ -58,6 +58,7 @@ public class Main extends IndexingEngine {
                     g.setHosts(HostIndex.keySet());
                     g.refreshDisplay();
                 });
+                g.refreshLiveLogDisplay();
             }
         }).start();
     }

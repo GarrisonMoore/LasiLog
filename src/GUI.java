@@ -357,9 +357,8 @@ public class GUI extends JFrame {
                     logs = IndexingEngine.getLogsByDay(selectedDay);
                 } else if (browseMode == BrowseMode.TIMES && selectedDay != null) {
                     LocalTime time = LocalTime.parse(selected.length() == 5 ? selected + ":00" : selected);
-                    logs = IndexingEngine.TimeIndex
-                            .getOrDefault(selectedDay, new java.util.TreeMap<>())
-                            .getOrDefault(time.withSecond(0).withNano(0), new ArrayList<>());
+                    TreeMap<java.time.LocalTime, List<LogObject>> dayMap = IndexingEngine.TimeIndex.get(selectedDay);
+                    logs = dayMap != null ? dayMap.getOrDefault(time.withSecond(0).withNano(0), new ArrayList<>()) : new ArrayList<>();
                 }
                 break;
         }
@@ -367,19 +366,44 @@ public class GUI extends JFrame {
         renderLogsToPane(selectedLogDisplay, logs);
     }
 
-    // appends incoming logs to the live log display pane
     public void appendLiveLog(LogObject log) {
         liveLogsBuffer.add(log);
-        if (liveLogsBuffer.size() > 2000) {
-            liveLogsBuffer.remove(0);
-        }
-        SwingUtilities.invokeLater(() -> {
-            String query = logSearchField.getText().trim().toLowerCase();
-            if (query.isEmpty() || log.getMessage().toLowerCase().contains(query)) {
-                StyledDocument doc = liveLogDisplay.getStyledDocument();
-                appendColoredLog(doc, log);
-                liveLogDisplay.setCaretPosition(doc.getLength());
+        synchronized (liveLogsBuffer) {
+            if (liveLogsBuffer.size() > 2000) {
+                liveLogsBuffer.remove(0);
             }
+        }
+    }
+
+    public void refreshLiveLogDisplay() {
+        List<LogObject> toAdd;
+        synchronized (liveLogsBuffer) {
+            if (liveLogsBuffer.isEmpty()) return;
+            // Get logs that haven't been rendered yet
+            int currentSize = liveLogsBuffer.size();
+            int numToRender = Math.min(currentSize, 50); // Batch up to 50 logs at a time
+            toAdd = new ArrayList<>(liveLogsBuffer.subList(Math.max(0, currentSize - numToRender), currentSize));
+        }
+
+        SwingUtilities.invokeLater(() -> {
+            StyledDocument doc = liveLogDisplay.getStyledDocument();
+            String query = logSearchField.getText().trim().toLowerCase();
+            
+            // To avoid overwhelming the EDT, we only append a limited number of logs per tick
+            for (LogObject log : toAdd) {
+                if (query.isEmpty() || log.getMessage().toLowerCase().contains(query)) {
+                    appendColoredLog(doc, log);
+                }
+            }
+            
+            // Trim the document if it gets too large to maintain performance
+            if (doc.getLength() > 100000) {
+                try {
+                    doc.remove(0, 20000);
+                } catch (BadLocationException ignored) {}
+            }
+            
+            liveLogDisplay.setCaretPosition(doc.getLength());
         });
     }
 
