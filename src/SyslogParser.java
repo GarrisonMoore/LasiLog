@@ -94,6 +94,8 @@ public class SyslogParser implements LogParser {
                 category = "GROUP POLICY";
             } else if (lowerMsg.contains("kbps") || lowerMsg.contains("wallpaper") || lowerMsg.contains("wallpapers") || lowerMsg.contains("none")) {
                 category = "GROUP POLICY";
+            }else if (lowerMsg.contains("winrm")) {
+                category = "REMOTE MANAGEMENT";
             }
         }
 
