@@ -187,7 +187,7 @@ public class GUI extends JFrame {
             if ("Hostnames".equals(selected)) {
                 for (String host : IndexingEngine.getHostKeys()) listModel.addElement(host);
             } else if ("Category".equals(selected)) {
-                String[] categories = {"ERRORS", "WARNINGS", "AUTH EVENTS", "AUDIT", "GROUP POLICY", "UNCATEGORIZED"};
+                String[] categories = {"ERRORS", "WARNINGS", "AUTH EVENTS", "AUDIT", "GROUP POLICY","REMOTE MANAGEMENT","UNCATEGORIZED"};
                 for (String cat : categories) listModel.addElement(cat);
             } else if ("Severity".equals(selected)) {
                 listModel.addElement("INFO");
