@@ -24,16 +24,24 @@ public class LogObject {
         return source;
     }
 
-    public String getSeverity() {
-        return severity;
-    }
-
     public String getCategory() {
         return category;
     }
 
     public String getMessage() {
         return message;
+    }
+
+    public String getSeverity() {
+        return severity;
+    }
+
+    public String setSeverity(String severity){
+        return severity;
+    }
+
+    public String setCategory(String category){
+        return category;
     }
 
     public String toString() {
