@@ -1,5 +1,6 @@
 package SentryStack;
 
+import GUI.GUI;
 import com.formdev.flatlaf.FlatDarkLaf;
 
 import javax.swing.*;
@@ -56,7 +57,7 @@ public class Main extends IndexingEngine {
         scheduleGuiRefresh();
     }
 
-    // Schedule a SentryStack.GUI refresh every 500ms
+    // Schedule a GUI.GUI refresh every 500ms
     private static void scheduleGuiRefresh() {
         new javax.swing.Timer(500, e -> {
             GUI g = GUI.getMyGui();
