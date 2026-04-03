@@ -10,14 +10,12 @@ public class CategorizationMaster {
         String source = log.getSource();
         String severity = log.getSeverity();
         String category = log.getCategory();
-        String message = log.getMessage();
-
-        String msg;
+        String pid = log.getPid();
+        String message = log.getMessage().toLowerCase();
 
         // throw away windows noise first
         if (message.contains("the locale specific resource for the desired message is not present")) {
-            msg = "computer fart noises";
-            message = msg.toLowerCase();
+            return null;
         }
 
         // --- CATEGORIZATION ---
@@ -58,6 +56,6 @@ public class CategorizationMaster {
             }
         }
         // new categorized log object
-        return new LogObject(timestamp, source, severity, category, message);
+        return new LogObject(timestamp, source, severity, category, pid, message);
     }
 }

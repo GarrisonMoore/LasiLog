@@ -433,6 +433,9 @@ public class GUI extends JFrame {
             Style catStyle = selectedLogDisplay.addStyle("category", null);
             StyleConstants.setForeground(catStyle, new Color(180, 180, 180));
 
+            Style pidStyle = selectedLogDisplay.addStyle("pid", null);
+            StyleConstants.setForeground(pidStyle, new Color(180, 180, 180));
+
             Style msgStyle = selectedLogDisplay.addStyle("message", null);
             StyleConstants.setForeground(msgStyle, new Color(220, 220, 220));
 

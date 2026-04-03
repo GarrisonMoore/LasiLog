@@ -1,6 +1,8 @@
 package SentryStack;
 
 import Interfaces.ParserMaster;
+import Parsers.Heuristic.HeuristicParser;
+import Parsers.JSON.JSONParser;
 import Parsers.Syslog.SyslogParser;
 
 import java.io.RandomAccessFile;
@@ -24,6 +26,7 @@ public class IndexingEngine{
 
     static {
         parsers.add(new SyslogParser());
+        parsers.add(new JSONParser());
         // Add other parsers here as needed
     }
 
