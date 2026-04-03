@@ -181,7 +181,7 @@ public class SidebarPanel extends JPanel {
                 if (host.toLowerCase().contains(query)) listModel.addElement(host);
             }
         } else if ("Category".equals(currentPivot)) {
-            String[] categories = {"ERRORS", "WARNINGS", "AUTH EVENTS", "AUDIT", "GROUP POLICY", "REMOTE MANAGEMENT", "UNCATEGORIZED"};
+            String[] categories = {"SECURITY & ERRORS", "WARNINGS", "AUTH & ACCESS", "SYSTEM & SERVICES", "POLICY & AUDIT", "NETWORK", "UNCATEGORIZED"};
             for (String cat : categories) {
                 if (cat.toLowerCase().contains(query)) listModel.addElement(cat);
             }
@@ -205,7 +205,7 @@ public class SidebarPanel extends JPanel {
         if ("Hostnames".equals(selected)) {
             for (String host : IndexingEngine.getHostKeys()) listModel.addElement(host);
         } else if ("Category".equals(selected)) {
-            String[] categories = {"ERRORS", "WARNINGS", "AUTH EVENTS", "AUDIT", "GROUP POLICY","REMOTE MANAGEMENT","UNCATEGORIZED"};
+            String[] categories = {"SECURITY & ERRORS", "WARNINGS", "AUTH & ACCESS", "SYSTEM & SERVICES", "POLICY & AUDIT", "NETWORK", "UNCATEGORIZED"};
             for (String cat : categories) listModel.addElement(cat);
         } else if ("Severity".equals(selected)) {
             listModel.addElement("INFO");
