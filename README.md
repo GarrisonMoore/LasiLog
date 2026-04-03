@@ -1,4 +1,3 @@
-[nxlog_Universal.txt](https://github.com/user-attachments/files/26473689/nxlog_Universal.txt)
 # Syslog - Universal Classmate Configuration
 ## Destination: 10.202.69.23 | Port: 5141 | Protocol: TCP
 
