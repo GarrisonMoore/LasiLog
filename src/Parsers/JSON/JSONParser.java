@@ -14,6 +14,8 @@ import java.time.format.DateTimeFormatter;
 
 public class JSONParser implements ParserMaster {
 
+    int JSON_LOG_COUNT = 0;
+
     // Matches the "EventTime":"2026-04-03 15:00:21" format from your JSON payload
     private static final DateTimeFormatter JSON_DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
@@ -69,12 +71,13 @@ public class JSONParser implements ParserMaster {
 
                 // Hand off to CategorizationMaster just like SyslogParser does!
                 return CategorizationMaster.categorize(logObject); //
+
+
             }
         } catch (JsonSyntaxException e) { //
             System.err.println("Failed to parse JSON segment: " + e.getMessage()); //
         }
-
-        // Return null if parsing failed or wasn't valid
-        return null; //
+        System.out.print(" | JSON logs processed: " + JSON_LOG_COUNT++);
+        return null;
     }
 }
