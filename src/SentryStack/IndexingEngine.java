@@ -1,6 +1,8 @@
 package SentryStack;
 
+import GUI.GUI;
 import Interfaces.ParserMaster;
+import Parsers.JSON.JSONParser;
 import Parsers.Syslog.SyslogParser;
 
 import java.io.RandomAccessFile;
@@ -17,13 +19,14 @@ public class IndexingEngine{
     // using a static ConcurrentHashMap to store the log objects
     static final ConcurrentHashMap<String, List<LogObject>> HostIndex = new ConcurrentHashMap<>();
     // using a static ConcurrentSkipListMap to store the log objects by time
-    static final ConcurrentSkipListMap<java.time.LocalDate, ConcurrentSkipListMap<java.time.LocalTime, List<LogObject>>> TimeIndex = new ConcurrentSkipListMap<>();
+    public static final ConcurrentSkipListMap<java.time.LocalDate, ConcurrentSkipListMap<java.time.LocalTime, List<LogObject>>> TimeIndex = new ConcurrentSkipListMap<>();
 
     // List of parsers to use
     private static final List<ParserMaster> parsers = new ArrayList<>();
 
     static {
         parsers.add(new SyslogParser());
+        parsers.add(new JSONParser());
         // Add other parsers here as needed
     }
 
@@ -57,7 +60,7 @@ public class IndexingEngine{
                             LogObject log = parser.parse(line);
                             if (log != null) {
                                 indexLog(log);
-                                // update SentryStack.GUI
+                                // update GUI.GUI
                                 if (GUI.getMyGui() != null) {
                                     GUI.getMyGui().appendLiveLog(log);
                                 }
@@ -101,11 +104,9 @@ public class IndexingEngine{
         List<LogObject> filtered = new ArrayList<>();
         for (ConcurrentSkipListMap<java.time.LocalTime, List<LogObject>> byTime : TimeIndex.values()) {
             for (List<LogObject> logList : byTime.values()) {
-                synchronized (logList) {
-                    for (LogObject log : logList) {
-                        if (log.getSeverity().equalsIgnoreCase(level)) {
-                            filtered.add(log);
-                        }
+                for (LogObject log : logList) {
+                    if (log.getSeverity().equalsIgnoreCase(level)) {
+                        filtered.add(log);
                     }
                 }
             }
@@ -118,11 +119,9 @@ public class IndexingEngine{
         List<LogObject> categorizedLogs = new ArrayList<>();
         for (ConcurrentSkipListMap<java.time.LocalTime, List<LogObject>> byTime : TimeIndex.values()) {
             for (List<LogObject> logList : byTime.values()) {
-                synchronized (logList) {
-                    for (LogObject log : logList) {
-                        if (log.getCategory().equalsIgnoreCase(category)) {
-                            categorizedLogs.add(log);
-                        }
+                for (LogObject log : logList) {
+                    if (log.getCategory().equalsIgnoreCase(category)) {
+                        categorizedLogs.add(log);
                     }
                 }
             }

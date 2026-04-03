@@ -1,5 +1,6 @@
 package SentryStack;
 
+import GUI.GUI;
 import com.formdev.flatlaf.FlatDarkLaf;
 
 import javax.swing.*;
@@ -11,6 +12,7 @@ import java.nio.file.Paths;
 public class Main extends IndexingEngine {
 
     // Path to the Windows Event Log file
+    //private static final Path LOG_FILE = Paths.get("src/test.log");
     private static final Path LOG_FILE = Paths.get("/var/log/windows_5141.log");
 
     public static void main(String[] args) throws InterruptedException {
@@ -26,6 +28,14 @@ public class Main extends IndexingEngine {
         UIManager.put("Button.arc", 12);
         UIManager.put("ScrollBar.thumbArc", 999);
         UIManager.put("ScrollBar.trackArc", 999);
+        UIManager.put("TabbedPane.tabArc", 12); // Rounding tabs
+        UIManager.put("TabbedPane.tabType", "card");
+        UIManager.put("TabbedPane.showTabSeparators", true);
+        UIManager.put("TabbedPane.tabAreaInsets", new java.awt.Insets(0, 0, 0, 0));
+        UIManager.put("TabbedPane.tabInsets", new java.awt.Insets(0, 15, 0, 15));
+        UIManager.put("TabbedPane.selectedTabPadInsets", new java.awt.Insets(0, 0, 0, 0));
+        UIManager.put("TabbedPane.tabAreaBackground", new Color(25, 25, 25));
+        UIManager.put("TabbedPane.tabsOverlapSelection", true);
         UIManager.put("TabbedPane.selectedBackground", new Color(40, 40, 40));
         UIManager.put("TabbedPane.tabHeight", 45);
         UIManager.put("TabbedPane.underlineColor", new Color(0, 150, 255)); // Electric Blue
@@ -54,7 +64,7 @@ public class Main extends IndexingEngine {
         scheduleGuiRefresh();
     }
 
-    // Schedule a SentryStack.GUI refresh every 500ms
+    // Schedule a GUI.GUI refresh every 500ms
     private static void scheduleGuiRefresh() {
         new javax.swing.Timer(500, e -> {
             GUI g = GUI.getMyGui();

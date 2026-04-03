@@ -6,7 +6,7 @@ import java.awt.*;
 
 public class ReadmeGUI {
 
-    // Colors for SentryStack.GUI
+    // Colors for GUI.GUI
     private final Color ACCENT_COLOR = new Color(0, 150, 255); // Electric Blue
     private final Color PANEL_BG = new Color(25, 25, 25);
     private final Color LOG_BG = new Color(15, 15, 15);

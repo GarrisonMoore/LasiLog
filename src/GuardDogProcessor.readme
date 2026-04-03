@@ -1,7 +1,7 @@
 # Guard Dog Processor - A Log Aggregation and Monitoring System
 
 The Guard Dog Processor is a Java-based log aggregation, parsing, and monitoring system designed to tail system logs in real-time.
-It features a modern, dark-themed SentryStack.GUI for sorting, searching, and viewing logs via multiple filters such as Time, Hostname, Category, and Severity.
+It features a modern, dark-themed GUI.GUI for sorting, searching, and viewing logs via multiple filters such as Time, Hostname, Category, and Severity.
 This application was designed in conjunction with the "Guard Dog NOC Bridge" project, a custom built Debian 13 syslog aggregator OS.
 
 
@@ -9,11 +9,11 @@ This application was designed in conjunction with the "Guard Dog NOC Bridge" pro
 * **Real-Time Log Ingestion**: Tails a specified log file (e.g., `/var/log/windows_5141.log`) on a daemon thread, parsing new entries immediately.
 * **RFC-5424 Syslog Parsing**: Includes a Regex-based parser capable of breaking down syslog messages, extracting timestamps, hosts, and dynamically categorizing them.
 * **Categorization & Severity Mapping**: Automatically flags logs as `INFO`, `WARN`, or `CRIT` based on message contents and sorts them into buckets (Errors, Warnings, Auth Events, etc.).
-* **Advanced SentryStack.GUI**: Built with Swing and FlatDarkLaf. Features a live log buffer, historical log views, and real-time search filtering.
+* **Advanced GUI.GUI**: Built with Swing and FlatDarkLaf. Features a live log buffer, historical log views, and real-time search filtering.
 
 ## Project Structure
-* **`SentryStack.java`**: The application entry point. Configures the UI theme, instantiates the SentryStack.GUI, and spins up the background log-tailing thread.
-* **`SentryStack.GUI.java`**: The primary Swing interface. Handles user interactions, list rendering, and filtering logic based on user input.
+* **`SentryStack.java`**: The application entry point. Configures the UI theme, instantiates the GUI.GUI, and spins up the background log-tailing thread.
+* **`GUI.GUI.java`**: The primary Swing interface. Handles user interactions, list rendering, and filtering logic based on user input.
 * **`SentryStack.IndexingEngine.java`**: The core data store. Maintains static memory indexes (`HostIndex` and `TimeIndex`) for rapid log retrieval and manages the file-reading process.
 * **`SentryStack.LogObject.java`**: The core data model representing a single log entry.
 * **`Interfaces.ParserMaster.java` & `Parsers.Syslog.SyslogParser.java`**: The interface and concrete implementation for transforming raw string lines into structured `SentryStack.LogObject`s.
@@ -25,7 +25,7 @@ This application was designed in conjunction with the "Guard Dog NOC Bridge" pro
 ## Setup and Execution
 1. Update the `LOG_FILE` constant in `SentryStack.java` to point to your target log file (default is `/var/log/windows_5141.log`).
 2. Compile the Java files, ensuring the FlatLaf library is included in the classpath.
-3. Run `SentryStack`. The SentryStack.GUI will open, and the log indexer will wait for the target file to exist before beginning to read and parse from the end of the file.
+3. Run `SentryStack`. The GUI.GUI will open, and the log indexer will wait for the target file to exist before beginning to read and parse from the end of the file.
 
 ## Future Plans
 
