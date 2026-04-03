@@ -44,9 +44,9 @@ public class SelectedLogsPanel extends JPanel {
         logSearchField.setPreferredSize(new Dimension(515, 35));
 
         logSearchField.getDocument().addDocumentListener(new DocumentListener() {
-            public void insertUpdate(DocumentEvent e) { parent.refreshDisplay(); }
-            public void removeUpdate(DocumentEvent e) { parent.refreshDisplay(); }
-            public void changedUpdate(DocumentEvent e) { parent.refreshDisplay(); }
+            public void insertUpdate(DocumentEvent e) { parent.refreshDisplay(); parent.refreshLiveFeed(); }
+            public void removeUpdate(DocumentEvent e) { parent.refreshDisplay(); parent.refreshLiveFeed(); }
+            public void changedUpdate(DocumentEvent e) { parent.refreshDisplay(); parent.refreshLiveFeed(); }
         });
 
         configureLogTable(selectedLogTable);

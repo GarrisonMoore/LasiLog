@@ -172,6 +172,10 @@ public class GUI extends JFrame {
         selectedLogsPanel.renderLogs(logsToDisplay);
     }
 
+    public void refreshLiveFeed() {
+        liveFeedPanel.refreshDisplay();
+    }
+
     public void appendLiveLog(LogObject log) {
         liveFeedPanel.appendLiveLog(log);
 

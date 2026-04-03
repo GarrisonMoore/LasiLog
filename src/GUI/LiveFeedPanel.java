@@ -21,6 +21,7 @@ public class LiveFeedPanel extends JPanel {
     private final JTable liveLogTable = new JTable(liveTableModel);
     private final JScrollPane liveTableScroll = new JScrollPane(liveLogTable);
 
+    private final java.util.List<LogObject> allLiveLogs = new java.util.concurrent.CopyOnWriteArrayList<>();
     private final Deque<LogObject> logBuffer = new ArrayDeque<>();
     private boolean paused = false;
 
@@ -43,7 +44,6 @@ public class LiveFeedPanel extends JPanel {
         liveLogTable.setSelectionBackground(new Color(30, 80, 150));
         liveLogTable.setSelectionForeground(Color.WHITE);
         liveLogTable.setFont(GUIConstants.MAIN_FONT);
-        liveLogTable.add(SelectedLogsPanel.getSearchField());
         
         liveLogTable.setDefaultRenderer(Object.class, new LogSeverityRenderer());
         
@@ -76,11 +76,63 @@ public class LiveFeedPanel extends JPanel {
             return;
         }
 
+        allLiveLogs.add(log);
+        if (allLiveLogs.size() > 500) {
+            allLiveLogs.remove(0);
+        }
+
         if (paused) {
             logBuffer.addLast(log);
             return;
         }
-        addLogRow(log);
+
+        if (matchesFilter(log)) {
+            addLogRowToTable(log);
+        }
+    }
+
+    private boolean matchesFilter(LogObject log) {
+        String filter = SelectedLogsPanel.getSearchField().getText().trim().toLowerCase();
+        if (filter.isEmpty()) return true;
+
+        return log.getMessage().toLowerCase().contains(filter) ||
+               log.getSource().toLowerCase().contains(filter) ||
+               log.getCategory().toLowerCase().contains(filter) ||
+               log.getSeverity().toLowerCase().contains(filter);
+    }
+
+    public void refreshDisplay() {
+        if (!SwingUtilities.isEventDispatchThread()) {
+            SwingUtilities.invokeLater(this::refreshDisplay);
+            return;
+        }
+
+        liveTableModel.setRowCount(0);
+        for (LogObject log : allLiveLogs) {
+            if (matchesFilter(log)) {
+                addLogRowToTable(log);
+            }
+        }
+    }
+
+    private void addLogRowToTable(LogObject log) {
+        liveTableModel.addRow(new Object[]{
+                formatTimestamp(log),
+                log.getSource(),
+                log.getSeverity(),
+                log.getCategory(),
+                log.getPid(),
+                log.getMessage()
+        });
+
+        if (liveTableModel.getRowCount() > 500) {
+            liveTableModel.removeRow(0);
+        }
+        
+        int lastRow = liveTableModel.getRowCount() - 1;
+        if (lastRow >= 0) {
+            liveLogTable.scrollRectToVisible(liveLogTable.getCellRect(lastRow, 0, true));
+        }
     }
 
     private String formatTimestamp(LogObject log) {
@@ -111,25 +163,10 @@ public class LiveFeedPanel extends JPanel {
 
     private void flushBuffer() {
         while (!logBuffer.isEmpty()) {
-            appendLiveLog(logBuffer.removeFirst());
-        }
-    }
-
-    public void addLogRow(LogObject log) {
-        liveTableModel.addRow(new Object[]{
-                formatTimestamp(log),
-                log.getSource(),
-                log.getSeverity(),
-                log.getCategory(),
-                log.getPid(),
-                log.getMessage()
-        });
-        if (liveTableModel.getRowCount() > 500) {
-            liveTableModel.removeRow(0);
-        }
-        int lastRow = liveTableModel.getRowCount() - 1;
-        if (lastRow >= 0) {
-            liveLogTable.scrollRectToVisible(liveLogTable.getCellRect(lastRow, 0, true));
+            LogObject log = logBuffer.removeFirst();
+            if (matchesFilter(log)) {
+                addLogRowToTable(log);
+            }
         }
     }
 
