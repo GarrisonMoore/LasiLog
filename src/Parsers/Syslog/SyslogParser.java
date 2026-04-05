@@ -36,7 +36,7 @@ public class SyslogParser implements ParserMaster {
     public boolean canParse(String rawline) {
 
         // make sure the line matches the RFC-5424 format
-        return RFC5424_PATTERN.matcher(rawline).matches() || BSD_PATTERN.matcher(rawline).matches();
+        return RFC5424_PATTERN.matcher(rawline).matches();
     }
 
     // override the parse method in the Interfaces.LogParser interface (do this for any new parser)
