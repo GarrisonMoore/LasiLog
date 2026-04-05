@@ -1,6 +1,7 @@
 package GUI;
 
 import SentryStack.LogObject;
+
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
@@ -25,6 +26,10 @@ public class SelectedLogsPanel extends JPanel {
             return false;
         }
     };
+
+    // Tracks the last known state so we don't do useless redraws
+    private int lastLogCount = -1;
+    private String lastFilter = "";
 
     private final JTable selectedLogTable = new JTable(logTableModel) {
         // Override the native tooltip method instead of using a motion listener
@@ -68,9 +73,20 @@ public class SelectedLogsPanel extends JPanel {
         logSearchField.setPreferredSize(new Dimension(515, 35));
 
         logSearchField.getDocument().addDocumentListener(new DocumentListener() {
-            public void insertUpdate(DocumentEvent e) { parent.refreshDisplay(); parent.refreshLiveFeed(); }
-            public void removeUpdate(DocumentEvent e) { parent.refreshDisplay(); parent.refreshLiveFeed(); }
-            public void changedUpdate(DocumentEvent e) { parent.refreshDisplay(); parent.refreshLiveFeed(); }
+            public void insertUpdate(DocumentEvent e) {
+                parent.refreshDisplay();
+                parent.refreshLiveFeed();
+            }
+
+            public void removeUpdate(DocumentEvent e) {
+                parent.refreshDisplay();
+                parent.refreshLiveFeed();
+            }
+
+            public void changedUpdate(DocumentEvent e) {
+                parent.refreshDisplay();
+                parent.refreshLiveFeed();
+            }
         });
 
         configureLogTable(selectedLogTable);
@@ -88,26 +104,9 @@ public class SelectedLogsPanel extends JPanel {
         table.setSelectionForeground(Color.WHITE);
         table.setFont(GUIConstants.MAIN_FONT);
         table.setDefaultRenderer(Object.class, new LogSeverityRenderer());
-        
+
         // Ensure "Message" column is wider
         table.getColumnModel().getColumn(5).setPreferredWidth(600);
-        
-        // Add tooltips to show full message
-        table.addMouseMotionListener(new java.awt.event.MouseMotionAdapter() {
-            @Override
-            public void mouseMoved(java.awt.event.MouseEvent e) {
-                int row = table.rowAtPoint(e.getPoint());
-                int col = table.columnAtPoint(e.getPoint());
-                if (row >= 0 && col == 5) {
-                    Object value = table.getValueAt(row, col);
-                    if (value != null) {
-                        table.setToolTipText("<html><body style='width: 400px;'>" + value.toString() + "</body></html>");
-                    }
-                } else {
-                    table.setToolTipText(null);
-                }
-            }
-        });
     }
 
     public void renderLogs(List<LogObject> logs) {
@@ -117,6 +116,15 @@ public class SelectedLogsPanel extends JPanel {
         }
 
         String filter = logSearchField.getText().trim().toLowerCase();
+
+        // THE CPU SAVER: If the data size is identical and the filter hasn't changed, DO NOTHING.
+        if (logs.size() == lastLogCount && filter.equals(lastFilter)) {
+            return;
+        }
+
+        // Update the trackers for next time
+        lastLogCount = logs.size();
+        lastFilter = filter;
 
         // --- 1. THE SNAPSHOT LIST ---
         // We make a quick copy of the incoming 'logs' to prevent the

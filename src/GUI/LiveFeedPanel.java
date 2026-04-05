@@ -18,7 +18,27 @@ public class LiveFeedPanel extends JPanel {
         }
     };
 
-    private final JTable liveLogTable = new JTable(liveTableModel);
+    private final JTable liveLogTable = new JTable(liveTableModel) {
+        @Override
+        public String getToolTipText(java.awt.event.MouseEvent e) {
+            java.awt.Point p = e.getPoint();
+            int row = rowAtPoint(p);
+            int col = columnAtPoint(p);
+
+            if (row >= 0 && col == 5) {
+                Object value = getValueAt(row, col);
+                if (value != null) {
+                    return "<html><body style='width: 400px;'>" + value.toString() + "</body></html>";
+                }
+            }
+            return super.getToolTipText(e);
+        }
+    };
+
+    // CPU SAVER: Static formatter used by all logs
+    private static final java.time.format.DateTimeFormatter DATE_FORMATTER =
+            java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
     private final JScrollPane liveTableScroll = new JScrollPane(liveLogTable);
 
     // Use a synchronized LinkedList instead of CopyOnWrite to stop CPU churning
@@ -27,6 +47,10 @@ public class LiveFeedPanel extends JPanel {
     // NEW: A concurrent queue to hold incoming logs until the UI is ready to draw them
     private final java.util.concurrent.ConcurrentLinkedQueue<LogObject> pendingLogs = new java.util.concurrent.ConcurrentLinkedQueue<>();
     private boolean paused = false;
+
+    // Tracks the last known state so we don't do useless redraws
+    private int lastLogCount = -1;
+    private String lastFilter = "";
 
     public LiveFeedPanel() {
         setLayout(new BorderLayout());
@@ -41,7 +65,7 @@ public class LiveFeedPanel extends JPanel {
         liveTableScroll.setBorder(BorderFactory.createLineBorder(GUIConstants.BORDER_COLOR, 1));
         liveTableScroll.putClientProperty("JComponent.arc", 12);
         liveTableScroll.getVerticalScrollBar().setUnitIncrement(16);
-        
+
         liveLogTable.setBackground(GUIConstants.LOG_BG);
         liveLogTable.setForeground(Color.WHITE);
         liveLogTable.setGridColor(GUIConstants.BORDER_COLOR);
@@ -50,30 +74,11 @@ public class LiveFeedPanel extends JPanel {
         liveLogTable.setSelectionBackground(new Color(30, 80, 150));
         liveLogTable.setSelectionForeground(Color.WHITE);
         liveLogTable.setFont(GUIConstants.MAIN_FONT);
-        
+
         liveLogTable.setDefaultRenderer(Object.class, new LogSeverityRenderer());
-        
+
         // Ensure "Message" column is wider
         liveLogTable.getColumnModel().getColumn(5).setPreferredWidth(600);
-        
-        // Add tooltips to show full message
-        liveLogTable.addMouseMotionListener(new java.awt.event.MouseMotionAdapter() {
-            @Override
-            public void mouseMoved(java.awt.event.MouseEvent e) {
-                int row = liveLogTable.rowAtPoint(e.getPoint());
-                int col = liveLogTable.columnAtPoint(e.getPoint());
-                if (row >= 0 && col == 5) {
-                    Object value = liveLogTable.getValueAt(row, col);
-                    if (value != null) {
-                        liveLogTable.setToolTipText("<html><body style='width: 400px;'>" + value.toString() + "</body></html>");
-                    }
-                } else {
-                    liveLogTable.setToolTipText(null);
-                }
-            }
-        });
-
-        add(liveTableScroll, BorderLayout.CENTER);
     }
 
     public void appendLiveLog(LogObject log) {
@@ -129,9 +134,9 @@ public class LiveFeedPanel extends JPanel {
         if (filter.isEmpty()) return true;
 
         return log.getMessage().toLowerCase().contains(filter) ||
-               log.getSource().toLowerCase().contains(filter) ||
-               log.getCategory().toLowerCase().contains(filter) ||
-               log.getSeverity().toLowerCase().contains(filter);
+                log.getSource().toLowerCase().contains(filter) ||
+                log.getCategory().toLowerCase().contains(filter) ||
+                log.getSeverity().toLowerCase().contains(filter);
     }
 
     public void refreshDisplay() {
@@ -139,6 +144,18 @@ public class LiveFeedPanel extends JPanel {
             SwingUtilities.invokeLater(this::refreshDisplay);
             return;
         }
+
+        // Fetch the filter once
+        String filter = SelectedLogsPanel.getSearchField().getText().trim().toLowerCase();
+
+        // THE CPU SAVER: If no new logs arrived and search text didn't change, DO NOTHING.
+        if (allLiveLogs.size() == lastLogCount && filter.equals(lastFilter)) {
+            return;
+        }
+
+        // Update trackers for next time
+        lastLogCount = allLiveLogs.size();
+        lastFilter = filter;
 
         liveTableModel.setRowCount(0);
         for (LogObject log : allLiveLogs) {
@@ -161,7 +178,7 @@ public class LiveFeedPanel extends JPanel {
         if (liveTableModel.getRowCount() > 500) {
             liveTableModel.removeRow(0);
         }
-        
+
         int lastRow = liveTableModel.getRowCount() - 1;
         if (lastRow >= 0) {
             liveLogTable.scrollRectToVisible(liveLogTable.getCellRect(lastRow, 0, true));
@@ -169,13 +186,10 @@ public class LiveFeedPanel extends JPanel {
     }
 
     private String formatTimestamp(LogObject log) {
-        java.time.LocalDateTime date = java.time.LocalDateTime.ofInstant(
+        return java.time.LocalDateTime.ofInstant(
                 java.time.Instant.ofEpochSecond(log.getTimestamp()),
                 java.time.ZoneId.systemDefault()
-        );
-        java.time.format.DateTimeFormatter formatter =
-                java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-        return date.format(formatter);
+        ).format(DATE_FORMATTER);
     }
 
     public void setPaused(boolean paused) {
