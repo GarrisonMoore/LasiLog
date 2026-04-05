@@ -57,7 +57,7 @@ public class SyslogParser implements ParserMaster {
                 pid = m.group(3);
                 msg = m.group(4);
 
-                if (looksLikeHost(host)) {
+                if (isValidHost(host)) {
                     return null;
                 }
 
@@ -84,7 +84,7 @@ public class SyslogParser implements ParserMaster {
                 pid = m.group(3);
                 msg = m.group(4);
 
-                if (looksLikeHost(host)) {
+                if (isValidHost(host)) {
                     return null;
                 }
 
@@ -107,22 +107,25 @@ public class SyslogParser implements ParserMaster {
         return categorizedLogObject;
     }
 
-    private boolean looksLikeHost(String host) {
+    private boolean isValidHost(String host) {
         if (host == null || host.isBlank()) {
-            return false;
+            return false; // Not a valid host
         }
 
         String h = host.trim();
 
-        // Accept normal hostnames / IP-ish values
-        if (!h.matches("[A-Za-z0-9._-]+") || h.contains("10.202.69.")) {
-            return true;
+        // 1. Must match standard hostname/IP characters. If it doesn't, it's invalid.
+        if (!h.matches("[A-Za-z0-9._-]+")) {
+            return false;
         }
 
-        // Reject obvious false positives
+        // 2. Reject obvious false positives
         String lower = h.toLowerCase(Locale.ROOT);
-        return lower.equals("default")
-                || lower.equals("operation")
-                || lower.equals("service");
+        if (lower.equals("default") || lower.equals("operation") || lower.equals("service")) {
+            return false; // These are not valid hostnames
+        }
+
+        // If it passes all checks, it's a valid host
+        return true;
     }
 }
