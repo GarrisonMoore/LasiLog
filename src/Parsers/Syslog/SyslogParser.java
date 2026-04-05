@@ -57,9 +57,9 @@ public class SyslogParser implements ParserMaster {
                 pid = m.group(3);
                 msg = m.group(4);
 
-                if (isValidHost(host)) {
-                    return null;
-                }
+//                if (isValidHost(host)) {
+//                    return null;
+//                }
 
                 ParseStatus.incrementRFC5424();
             } catch (Exception e) {
@@ -84,9 +84,9 @@ public class SyslogParser implements ParserMaster {
                 pid = "na";
                 msg = m.group(3);
 
-                if (isValidHost(host)) {
-                    return null;
-                }
+//                if (isValidHost(host)) {
+//                    return null;
+//                }
 
                 ParseStatus.incrementBSD();
             } catch (Exception e) {

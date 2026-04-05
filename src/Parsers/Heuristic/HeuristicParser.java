@@ -2,6 +2,7 @@ package Parsers.Heuristic;
 
 import Interfaces.CategorizationMaster;
 import Interfaces.ParserMaster;
+import Interfaces.ParseStatus;
 import SentryStack.LogObject;
 
 import java.time.LocalDateTime;
@@ -11,6 +12,8 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+
 
 public class HeuristicParser implements ParserMaster {
 
@@ -38,8 +41,8 @@ public class HeuristicParser implements ParserMaster {
         }else {
             String timestampSTR = m.group(1);
             source = m.group(2);
-            pid = "N/A";          // Default to N/A or empty string
-            message = m.group(3); // Grab the rest of the line as the message
+            pid = m.group(3);          // Default to N/A or empty string
+            message = m.group(4); // Grab the rest of the line as the message
 
 
             timestamp = parseTimestamp(timestampSTR);
@@ -47,6 +50,7 @@ public class HeuristicParser implements ParserMaster {
                 return null;
             }
         }
+        ParseStatus.incrementUniversal();
         LogObject rawLog = new LogObject(timestamp, source, "INFO", "UNCATEGORIZED", pid, message);
         return CategorizationMaster.categorize(rawLog);
     }
