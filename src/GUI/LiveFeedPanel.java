@@ -21,14 +21,20 @@ public class LiveFeedPanel extends JPanel {
     private final JTable liveLogTable = new JTable(liveTableModel);
     private final JScrollPane liveTableScroll = new JScrollPane(liveLogTable);
 
-    private final java.util.List<LogObject> allLiveLogs = new java.util.concurrent.CopyOnWriteArrayList<>();
+    // Use a synchronized LinkedList instead of CopyOnWrite to stop CPU churning
+    private final java.util.List<LogObject> allLiveLogs = java.util.Collections.synchronizedList(new java.util.LinkedList<>());
     private final Deque<LogObject> logBuffer = new ArrayDeque<>();
+    // NEW: A concurrent queue to hold incoming logs until the UI is ready to draw them
+    private final java.util.concurrent.ConcurrentLinkedQueue<LogObject> pendingLogs = new java.util.concurrent.ConcurrentLinkedQueue<>();
     private boolean paused = false;
 
     public LiveFeedPanel() {
         setLayout(new BorderLayout());
         setOpaque(false);
         initComponents();
+
+        // NEW: Batch processor timer (runs every 250ms)
+        new javax.swing.Timer(250, e -> processPendingLogs()).start();
     }
 
     private void initComponents() {
@@ -71,23 +77,50 @@ public class LiveFeedPanel extends JPanel {
     }
 
     public void appendLiveLog(LogObject log) {
-        if (!SwingUtilities.isEventDispatchThread()) {
-            SwingUtilities.invokeLater(() -> appendLiveLog(log));
-            return;
-        }
-
+        // Just add to our data structures instantly. No UI blocking!
         allLiveLogs.add(log);
         if (allLiveLogs.size() > 500) {
             allLiveLogs.remove(0);
         }
+        pendingLogs.add(log);
+    }
 
-        if (paused) {
-            logBuffer.addLast(log);
-            return;
+    private void processPendingLogs() {
+        if (pendingLogs.isEmpty()) return;
+
+        boolean added = false;
+
+        // Dump the whole queue into the table at once
+        while (!pendingLogs.isEmpty()) {
+            LogObject log = pendingLogs.poll();
+            if (paused) {
+                logBuffer.addLast(log);
+                continue;
+            }
+            if (matchesFilter(log)) {
+                liveTableModel.addRow(new Object[]{
+                        formatTimestamp(log),
+                        log.getSource(),
+                        log.getSeverity(),
+                        log.getCategory(),
+                        log.getPid(),
+                        log.getMessage()
+                });
+                added = true;
+            }
         }
 
-        if (matchesFilter(log)) {
-            addLogRowToTable(log);
+        // Clean up old rows ONCE per batch, not 1000 times
+        while (liveTableModel.getRowCount() > 500) {
+            liveTableModel.removeRow(0);
+        }
+
+        // Scroll to bottom ONCE per batch
+        if (added) {
+            int lastRow = liveTableModel.getRowCount() - 1;
+            if (lastRow >= 0) {
+                liveLogTable.scrollRectToVisible(liveLogTable.getCellRect(lastRow, 0, true));
+            }
         }
     }
 

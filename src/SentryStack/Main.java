@@ -107,12 +107,14 @@ public class Main extends IndexingEngine {
         new javax.swing.Timer(500, e -> {
             GUI g = GUI.getMyGui();
             if (g != null) {
-                SwingUtilities.invokeLater(() -> {
-                    g.setHosts(HostIndex.keySet());
-                    g.refreshDisplay();
-                });
+                g.setHosts(HostIndex.keySet());
+                g.refreshDisplay();
+
+                // Keep the sidebar updated with live counts since we removed it from appendLiveLog
+                g.getSidebar().applySidebarFilter();
             }
-            DatabaseEngine.commit();
+            // NEW: Push the SQLite disk I/O off the UI thread!
+            new Thread(DatabaseEngine::commit, "db-commit").start();
         }).start();
     }
 }

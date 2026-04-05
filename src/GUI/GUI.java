@@ -179,21 +179,7 @@ public class GUI extends JFrame {
     public void appendLiveLog(LogObject log) {
         liveFeedPanel.appendLiveLog(log);
 
-        SwingUtilities.invokeLater(sidebar::applySidebarFilter);
-
-        // If the current view matches the new log, we might want to refresh.
-        String currentPivot = sidebar.getSelectedPivot();
-        String selectedKey = sidebar.getSelectedKey();
-
-        if (selectedKey != null) {
-            boolean shouldRefresh = false;
-            if ("Hostnames".equals(currentPivot) && selectedKey.equals(log.getSource())) shouldRefresh = true;
-            else if ("Category".equals(currentPivot) && selectedKey.equals(log.getCategory())) shouldRefresh = true;
-            else if ("Severity".equals(currentPivot) && selectedKey.equals(log.getSeverity())) shouldRefresh = true;
-
-            if (shouldRefresh) {
-                SwingUtilities.invokeLater(this::refreshDisplay);
-            }
-        }
+        // REMOVED: SwingUtilities.invokeLater(sidebar::applySidebarFilter);
+        // REMOVED: The logic checking shouldRefresh and forcing a display refresh per log
     }
 }
