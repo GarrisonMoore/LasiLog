@@ -88,12 +88,12 @@ public class IndexingEngine{
 
             // index by time
             TimeIndex.computeIfAbsent(day, k -> new ConcurrentSkipListMap<>())
-                     .computeIfAbsent(time, k -> new CopyOnWriteArrayList<>())
-                     .add(logObject);
+                    .computeIfAbsent(time, k -> Collections.synchronizedList(new ArrayList<>()))
+                    .add(logObject);
 
             // index by host
-            HostIndex.computeIfAbsent(logObject.getSource(), k -> new CopyOnWriteArrayList<>())
-                     .add(logObject);
+            HostIndex.computeIfAbsent(logObject.getSource(), k -> Collections.synchronizedList(new ArrayList<>()))
+                    .add(logObject);
 
             DatabaseEngine.insertLog(logObject);
 
@@ -163,8 +163,7 @@ public class IndexingEngine{
      * Called once at startup, before tailing begins.
      */
     public static void loadFromDatabase() {
-        List<LogObject> savedLogs = DatabaseEngine.loadRecentLogs(24 * 3);
-        for (LogObject log : savedLogs) {
+        DatabaseEngine.loadRecentLogs(24 * 3, log -> {
             try {
                 java.time.LocalDateTime dateTime = java.time.LocalDateTime.ofInstant(
                         java.time.Instant.ofEpochSecond(log.getTimestamp()),
@@ -174,16 +173,15 @@ public class IndexingEngine{
                 java.time.LocalTime time = dateTime.toLocalTime().withSecond(0).withNano(0);
 
                 TimeIndex.computeIfAbsent(day, k -> new ConcurrentSkipListMap<>())
-                        .computeIfAbsent(time, k -> new CopyOnWriteArrayList<>())
+                        .computeIfAbsent(time, k -> Collections.synchronizedList(new ArrayList<>()))
                         .add(log);
 
-                HostIndex.computeIfAbsent(log.getSource(), k -> new CopyOnWriteArrayList<>())
+                HostIndex.computeIfAbsent(log.getSource(), k -> Collections.synchronizedList(new ArrayList<>()))
                         .add(log);
             } catch (Exception e) {
                 System.err.println("Error restoring log: " + e.getMessage());
             }
-        }
-        System.out.println("Restored " + savedLogs.size() + " logs into memory indexes.");
+        });
     }
 
 
