@@ -1,77 +1,103 @@
 package Parsers.Heuristic;
 
 import Interfaces.CategorizationMaster;
-import Interfaces.ParserMaster;
-import Interfaces.ParseStatus;
 import SentryStack.LogObject;
+import Interfaces.ParserMaster;
 
 import java.time.LocalDateTime;
-import java.time.Year;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-
-
 public class HeuristicParser implements ParserMaster {
 
-    Long timestamp;
-    String source;
-    String category;
-    String severity;
-    String pid;
-    String message;
-
+    // Just look for something that strongly resembles a date/time combo anywhere in the line
+    private static final Pattern DATE_HUNTER = Pattern.compile(
+            "(\\d{4}-\\d{2}-\\d{2}[ T]\\d{2}:\\d{2}:\\d{2}|[A-Z][a-z]{2}\\s+\\d{1,2}\\s+\\d{2}:\\d{2}:\\d{2})"
+    );
 
     @Override
     public boolean canParse(String rawline) {
+        // The ultimate fallback. If it reaches here, we try to parse it.
         return true;
     }
 
     @Override
     public LogObject parse(String rawline) {
+        if (rawline == null || rawline.isBlank()) return null;
 
-        Pattern universalPattern = Pattern.compile("^(\\d{4}-\\d{2}-\\d{2}[ T]\\d{2}:\\d{2}:\\d{2}|[A-Z][a-z]{2}\\s+\\d{1,2}\\s+\\d{2}:\\d{2}:\\d{2})\\s+(\\S+)\\s+(.*)$");
+        long epochTime = 0;
+        String host = "UNKNOWN-HOST";
+        String pid = "N/A";
+        String message = rawline; // Default to whole line if we fail to extract
 
-        Matcher m = universalPattern.matcher(rawline);
-        if (!m.find()) {
-            return null;
-        }else {
-            String timestampSTR = m.group(1);
-            source = m.group(2);
-            pid = m.group(3);          // Default to N/A or empty string
-            message = m.group(4); // Grab the rest of the line as the message
+        try {
+            // 1. Hunt for a Timestamp
+            Matcher dateMatcher = DATE_HUNTER.matcher(rawline);
+            if (dateMatcher.find()) {
+                String dateStr = dateMatcher.group(1);
+                // TODO: Add try/catch blocks here to attempt parsing dateStr with a few common DateTimeFormatters
+                // If successful, set epochTime.
 
-
-            timestamp = parseTimestamp(timestampSTR);
-            if (timestamp == null) {
-                return null;
+                // Remove the date from the raw line so we don't process it as a host/message
+                rawline = rawline.replace(dateStr, "").trim();
+            } else {
+                // Fallback: use current time if absolutely no timestamp is found
+                epochTime = System.currentTimeMillis() / 1000;
             }
+
+            // 2. Tokenize the remaining string
+            String[] tokens = rawline.split("\\s+");
+            List<String> messageTokens = new ArrayList<>();
+            boolean hostFound = false;
+
+            // 3. Score the tokens
+            for (String token : tokens) {
+                // If we haven't found a host yet, check if this token looks like one
+                if (!hostFound && isLikelyHost(token)) {
+                    host = token;
+                    hostFound = true;
+                } else {
+                    // Everything else gets dumped into the message bucket
+                    messageTokens.add(token);
+                }
+            }
+
+            // Rebuild the message
+            message = String.join(" ", messageTokens);
+
+        } catch (Exception e) {
+            System.err.println("Heuristic parser encountered an error, falling back to raw dump: " + e.getMessage());
+            message = rawline;
         }
-        ParseStatus.incrementUniversal();
-        LogObject rawLog = new LogObject(timestamp, source, "INFO", "UNCATEGORIZED", pid, message);
-        return CategorizationMaster.categorize(rawLog);
+
+        String severity = "INFO"; // You could add logic to hunt for "ERROR" or "WARN" in the tokens
+        String category = "HEURISTIC";
+
+        LogObject logObject = new LogObject(epochTime, host, severity, category, pid, message);
+        return CategorizationMaster.categorize(logObject);
     }
 
-    private Long parseTimestamp(String timestampSTR) {
-        try {
-            if (timestampSTR.matches("\\d{4}-\\d{2}-\\d{2}[ T]\\d{2}:\\d{2}:\\d{2}")) {
-                String normalized = timestampSTR.replace(' ', 'T');
-                LocalDateTime dt = LocalDateTime.parse(normalized, DateTimeFormatter.ISO_LOCAL_DATE_TIME);
-                return dt.atZone(ZoneId.systemDefault()).toEpochSecond();
+    private boolean isLikelyHost(String token) {
+        // Strip common brackets that might surround an IP/Host
+        String cleanToken = token.replaceAll("[\\[\\]()=:]", "");
+
+        // Is it an IPv4 address?
+        if (cleanToken.matches("^\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}$")) return true;
+
+        // Is it a MAC address?
+        if (cleanToken.matches("^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$")) return true;
+
+        // Does it look like a standard hostname with no weird punctuation?
+        if (cleanToken.matches("^[A-Za-z0-9.-]+$") && cleanToken.length() > 2) {
+            String lower = cleanToken.toLowerCase();
+            if (!lower.equals("info") && !lower.equals("error") && !lower.equals("warn")) {
+                return true;
             }
-
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MMM d HH:mm:ss");
-            LocalDateTime dt = LocalDateTime.parse(timestampSTR, formatter);
-
-            // Since the log has no year, use the current year
-            dt = dt.withYear(Year.now().getValue());
-
-            return dt.atZone(ZoneId.systemDefault()).toEpochSecond();
-        } catch (DateTimeParseException e) {
-            return null;
         }
+        return false;
     }
 }
