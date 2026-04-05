@@ -96,7 +96,7 @@ public class SelectedLogsPanel extends JPanel {
         String filter = logSearchField.getText().trim().toLowerCase();
         logTableModel.setRowCount(0);
         // Create a quick snapshot of the list to prevent ConcurrentModificationException
-        List<LogObject> snapshotList = new ArrayList<>(someListOfLogs);
+        List<LogObject> snapshotList = new ArrayList<>(logs);
 
         for (LogObject log : snapshotList) {
             if (filter.isEmpty() || 

@@ -1,6 +1,7 @@
 package Parsers.Heuristic;
 
 import Interfaces.CategorizationMaster;
+import Interfaces.ParseStatus;
 import SentryStack.LogObject;
 import Interfaces.ParserMaster;
 
@@ -90,6 +91,7 @@ public class HeuristicParser implements ParserMaster {
         String severity = "INFO"; // You could add logic to hunt for "ERROR" or "WARN" in the tokens
         String category = "PARSER-HEURISTIC"; // Temporary Pivotbox Category
 
+        ParseStatus.incrementUniversal();
         LogObject logObject = new LogObject(epochTime, host, severity, category, pid, message);
         return CategorizationMaster.categorize(logObject);
     }
@@ -104,13 +106,28 @@ public class HeuristicParser implements ParserMaster {
         // Is it a MAC address?
         if (cleanToken.matches("^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$")) return true;
 
-        // Does it look like a standard hostname with no weird punctuation?
+        // Does it look like a Fully Qualified Domain Name (FQDN)? (e.g., host.domain.local)
+        // Must contain at least one dot surrounded by alphanumeric characters
+        if (cleanToken.matches("^[a-zA-Z0-9-]+\\.[a-zA-Z0-9.-]+$")) return true;
+
+        // Does it look like a standard machine name?
         if (cleanToken.matches("^[A-Za-z0-9.-]+$") && cleanToken.length() > 2) {
             String lower = cleanToken.toLowerCase();
-            if (!lower.equals("info") && !lower.equals("error") && !lower.equals("warn")) {
+            if (lower.equals("info") || lower.equals("error") || lower.equals("warn") || lower.equals("debug")) {
+                return false;
+            }
+
+            boolean hasLetter = cleanToken.matches(".*[A-Za-z].*");
+            boolean hasNumber = cleanToken.matches(".*[0-9].*");
+            boolean hasDash = cleanToken.contains("-");
+
+            // If it is pure letters (like "The" or "Connection"), reject it.
+            // A valid guessed hostname should contain a mix of letters AND a number or dash.
+            if (hasLetter && (hasNumber || hasDash)) {
                 return true;
             }
         }
+
         return false;
     }
 }
