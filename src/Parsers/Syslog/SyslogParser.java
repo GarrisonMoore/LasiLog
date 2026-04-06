@@ -11,10 +11,9 @@ import java.util.regex.Pattern;
 
 public class SyslogParser implements ParserMaster {
 
-    // Matches true RFC-5424 format:
-    // Optional <PRI>VERSION, then TIMESTAMP, HOST, APP, PID, MSGID, and the rest (Structured Data + MSG)
+    // Matches RFC-5424 format with optional second timestamp and optional version
     private static final Pattern RFC5424_PATTERN = Pattern.compile(
-            "^(?:<\\d+>\\d+\\s+)?(\\S+)\\s+(\\S+)\\s+(\\S+)\\s+(\\S+)\\s+(\\S+)\\s+(.*)$"
+            "^(?:<\\d+>)?(?:\\d+\\s+)?(\\S+)\\s+(\\S+)\\s+(\\S+)\\s+(\\S+)\\s+(\\S+)\\s+(?:\\S+\\s+)?(.*)$"
     );
 
     @Override
@@ -59,6 +58,11 @@ public class SyslogParser implements ParserMaster {
 
             // Group 5 is MsgID (usually "-"), Group 6 is the rest of the line (Structured Data + Message)
             msg = m.group(6);
+
+            // NXLog syslog_ietf fix: if msg starts with another timestamp (like 2026-04-06...), strip it
+            if (msg.matches("^\\d{4}-\\d{2}-\\d{2}[ T]\\d{2}:\\d{2}:\\d{2}.*$")) {
+                msg = msg.replaceFirst("^\\d{4}-\\d{2}-\\d{2}[ T]\\d{2}:\\d{2}:\\d{2}[\\.\\d+A-Z:-]*\\s*", "");
+            }
 
             if (!isValidHost(host)) {
                 // DEBUG: The host validation failed

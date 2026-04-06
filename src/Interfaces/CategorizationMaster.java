@@ -84,9 +84,11 @@ public class CategorizationMaster {
         }
 
         // --- DEFAULT ---
-        else if (category.equals("UNCATEGORIZED")) {
+        else {
             severity = "INFO";
-            category = "UNCATEGORIZED";
+            if (category == null || category.isEmpty() || category.startsWith("PARSER-")) {
+                category = "UNCATEGORIZED";
+            }
         }
 
         // New categorized log object

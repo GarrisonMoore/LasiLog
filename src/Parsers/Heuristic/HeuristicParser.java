@@ -21,7 +21,7 @@ public class HeuristicParser implements ParserMaster {
     // (?:<\\d+>)? ignores syslog priority tags like <13> if they exist.
     // Safely eats Syslog priorities (<14>), version numbers (1), and timezone/milliseconds (.123Z)
     private static final Pattern DATE_HUNTER = Pattern.compile(
-            "^(?:<\\d+>)?(?:\\s*\\d+)?\\s*(\\d{4}-\\d{2}-\\d{2}[ T]\\d{2}:\\d{2}:\\d{2}[\\.\\d+A-Za-z:-]*|[A-Z][a-z]{2}\\s+\\d{1,2}\\s+\\d{2}:\\d{2}:\\d{2})"
+            "^(?:<\\d+>)?(?:\\s*\\d+)?\\s*(\\d{4}-\\d{2}-\\d{2}[ T]\\d{2}:\\d{2}:\\d{2}[\\.\\d+A-Za-z:-]*|[A-Z][a-z]{2}\\s+\\d{1,2}\\s+\\d{2}:\\d{2}:\\d{2})\\s+(?:\\d{4}-\\d{2}-\\d{2}[ T]\\d{2}:\\d{2}:\\d{2}[\\.\\d+A-Za-z:-]*\\s+)?"
     );
 
     @Override
