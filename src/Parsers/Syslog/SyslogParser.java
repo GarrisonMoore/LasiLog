@@ -18,18 +18,26 @@ public class SyslogParser implements ParserMaster {
             "^(?:<\\d+>)?(?:\\d+\\s+)?(\\S+T\\S+)\\s+(\\S+)\\s+(\\S+)\\s+(\\S+)\\s+(\\S+)\\s+(?:\\S+\\s+)?(.*?)\\s*$"
     );
 
+    // List of severities to avoid over-stripping in cleaning logic
+    private static final String SEVERITIES_REGEX = "(?:INFO|WARN|ERROR|DEBUG|CRITICAL|NOTICE|EMERG|ALERT|ERR|WARNING|FATAL)";
+
     @Override
     public boolean canParse(String rawline) {
         if (rawline == null || rawline.isBlank()) return false;
 
-        // Reject logs that look like the second half of an NXLog (starting with a timestamp and then a severity)
-        // This prevents them from being picked up by SyslogParser or HeuristicParser
-        if (rawline.matches("^\\d{4}-\\d{2}-\\d{2}\\s+\\d{2}:\\d{2}:\\d{2}.*\\s+(?:INFO|WARN|ERROR|DEBUG|CRITICAL).*$")) {
+        // Check if it's an RFC5424 log first
+        if (RFC5424_PATTERN.matcher(rawline).matches()) {
+            return true;
+        }
+
+        // Only reject logs that start with a timestamp followed IMMEDIATELY by a severity
+        // This usually indicates the second half of a log that was split by another process
+        // BUT don't reject if there is a hostname/tabbed structure (handled by Heuristic)
+        if (rawline.matches("^\\d{4}-\\d{2}-\\d{2}\\s+\\d{2}:\\d{2}:\\d{2}\\s+" + SEVERITIES_REGEX + ".*$")) {
             return false;
         }
 
-        // Check if it's an RFC5424 log
-        return RFC5424_PATTERN.matcher(rawline).matches();
+        return false;
     }
 
     @Override
@@ -72,7 +80,23 @@ public class SyslogParser implements ParserMaster {
 
             // NXLog syslog_ietf fix: if msg contains another timestamp (like 2026-04-06...), strip it
             // The timestamp can be preceded by [MetaData] or similar structured data tags if they weren't matched by the regex
-            msg = msg.replaceFirst("(?:\\[.*?\\]\\s*)?\\d{4}-\\d{2}-\\d{2}[ T]\\d{2}:\\d{2}:\\d{2}[\\.\\d+A-Z:-]*\\s*", "");
+            // Improved regex to avoid over-stripping:
+            // 1. Anchor the strip to the START of the message if possible
+            // 2. Only strip the timestamp and optional [MetaData]
+            msg = msg.replaceFirst("^(?:\\[.*?\\]\\s*)?\\d{4}-\\d{2}-\\d{2}[ T]\\d{2}:\\d{2}:\\d{2}[\\.\\d+A-Z:-]*\\s*", "");
+
+            // If it starts with a severity (INFO, ERROR, etc.) after stripping the timestamp, strip that too
+            // BUT ONLY if there's more content after it (don't strip the whole message if it was just a severity)
+            // AND check for optional category (like tabbed format fields) that might be in the message
+            msg = msg.replaceFirst("^" + SEVERITIES_REGEX + "\\s+", "");
+            msg = msg.replaceFirst("^(?:SYSTEM & SERVICES|AUTH & ACCESS|NETWORK|POLICY & AUDIT|WARNINGS|SECURITY & ERRORS|UNCATEGORIZED)\\s+", "");
+
+            // Also check for the Hostname that might be in the redundant header
+            msg = msg.replaceFirst("^" + Pattern.quote(host) + "\\s+", "");
+
+            // Also check for the AppName[PID] pattern that might be in the redundant header
+            // Be careful to only strip if it's followed by more text
+            msg = msg.replaceFirst("^\\S+\\[\\d+\\](?:\\[\\d+\\].*?)?\\s+", "");
 
             if (!isValidHost(host)) {
                 // DEBUG: The host validation failed

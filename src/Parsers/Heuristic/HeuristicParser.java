@@ -24,12 +24,16 @@ public class HeuristicParser implements ParserMaster {
             "^(?:<\\d+>)?(?:\\s*\\d+)?\\s*(\\d{4}-\\d{2}-\\d{2}[ T]\\d{2}:\\d{2}:\\d{2}[\\.\\d+A-Za-z:-]*|[A-Z][a-z]{2}\\s+\\d{1,2}\\s+\\d{2}:\\d{2}:\\d{2})\\s+(?:\\d{4}-\\d{2}-\\d{2}[ T]\\d{2}:\\d{2}:\\d{2}[\\.\\d+A-Za-z:-]*\\s+)?"
     );
 
+    // List of severities to check for
+    private static final String SEVERITIES_REGEX = "(?:INFO|WARN|ERROR|DEBUG|CRITICAL|NOTICE|EMERG|ALERT|ERR|WARNING|FATAL)";
+
     @Override
     public boolean canParse(String rawline) {
         if (rawline == null || rawline.isBlank()) return false;
         
-        // Reject lines that look like a fragment from NXLog (second timestamp with space + severity)
-        if (rawline.matches("^\\d{4}-\\d{2}-\\d{2}\\s+\\d{2}:\\d{2}:\\d{2}.*\\s+(?:INFO|WARN|ERROR|DEBUG|CRITICAL).*$")) {
+        // Only reject logs that start with a timestamp followed IMMEDIATELY by a severity
+        // This indicates a fragment from an NXLog split.
+        if (rawline.matches("^\\d{4}-\\d{2}-\\d{2}\\s+\\d{2}:\\d{2}:\\d{2}\\s+" + SEVERITIES_REGEX + ".*$")) {
             return false;
         }
 
@@ -49,6 +53,8 @@ public class HeuristicParser implements ParserMaster {
 
         long epochTime = 0;
         String host = "UNKNOWN-HOST";
+        String severity = "INFO";
+        String category = "UNCATEGORIZED";
         String pid = "N/A";
         String message = rawline; // Default to whole line if we fail to extract
 
@@ -69,17 +75,44 @@ public class HeuristicParser implements ParserMaster {
             }
 
             // 2. Tokenize the remaining string
-            String[] tokens = rawline.split("\\s+");
+            // Improved tokenization to handle TABS and SPACES
+            // Keep tabs to identify tab-separated fields
+            String[] tokens = rawline.split("\t");
+            if (tokens.length < 2) {
+                // Not tab-separated, fallback to space/tab mixture
+                tokens = rawline.split("[\\t ]+");
+            }
             List<String> messageTokens = new ArrayList<>();
 
             // 3. Score ONLY the first token to see if it's a host
             if (tokens.length > 0) {
                 if (isLikelyHost(tokens[0])) {
                     host = tokens[0];
-                    // Replaces the "for (int i = 1; ...)" loop
-                    messageTokens.addAll(Arrays.asList(tokens).subList(1, tokens.length));
+                    // The next few tokens might be Severity, Category, etc. if it's the tabbed format
+                    int startIndex = 1;
+                    
+                    // Optional: Skip Severity and Category if they match patterns
+                    while (startIndex < tokens.length) {
+                        String t = tokens[startIndex].toUpperCase();
+                        if (t.matches(SEVERITIES_REGEX)) {
+                            severity = t;
+                            startIndex++;
+                        } else if (t.matches("^[A-Z& ]{3,20}$") && (t.contains("&") || t.contains("SYSTEM") || t.contains("SERVICES") || t.contains("AUTH") || t.contains("NETWORK"))) {
+                            category = t;
+                            startIndex++;
+                        } else {
+                            break;
+                        }
+                    }
+
+                    // Check if the next token looks like an AppName[PID] or AppName[PID][ThreadID]
+                    if (startIndex < tokens.length && tokens[startIndex].matches("^.*\\[\\d+\\].*$")) {
+                        pid = tokens[startIndex];
+                        startIndex++;
+                    }
+
+                    messageTokens.addAll(Arrays.asList(tokens).subList(startIndex, tokens.length));
                 } else {
-                    // Replaces the "for (int i = 0; ...)" loop
                     Collections.addAll(messageTokens, tokens);
                 }
             }
@@ -94,9 +127,6 @@ public class HeuristicParser implements ParserMaster {
             System.out.println("DEBUG DROP [HEURISTIC] - Exception: " + e.getMessage() + " | Raw: " + rawline);
             message = rawline;
         }
-
-        String severity = "INFO"; // You could add logic to hunt for "ERROR" or "WARN" in the tokens
-        String category = "UNCATEGORIZED";
 
         ParseStatus.incrementUniversal();
         LogObject logObject = new LogObject(epochTime, host, severity, category, pid, message);
