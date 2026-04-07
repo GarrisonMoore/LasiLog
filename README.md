@@ -4,7 +4,7 @@
 # ! Instructions !
 #### 1. Download the universal config and place it on your desktop - [nxlog_Universal.txt](https://github.com/user-attachments/files/26487261/nxlog_Universal.txt)
 
-#### 2. Install NXlog Community Edition on your server using default file paths
+#### 2. Install NXlog Community Edition on your server using default file paths - https://nxlog.co/downloads/nxlog-ce
 #### 3. Run Notepad as Administrator, select - file > open, and Navigate to C:\Program Files\nxlog\conf\
 #### 4. Change file extensions to "All files", and open the "nxlog.conf" file. 
 <img width="600" height="400" alt="Screenshot 2026-04-03 162308" src="https://github.com/user-attachments/assets/b77c3884-b189-4dfd-9e68-57fd92059b55" />
