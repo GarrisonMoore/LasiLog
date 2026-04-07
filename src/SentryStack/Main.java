@@ -17,6 +17,9 @@ public class Main extends IndexingEngine {
 
     public static void main(String[] args) throws InterruptedException {
 
+        System.out.println("DEBUG: Guard Dog NOC Bridge - Optimization Branch Active");
+        System.out.println("DEBUG: Loading database history...");
+
         DatabaseEngine.initialize();
 
         // Restore previously saved logs into memory so the GUI can display them
