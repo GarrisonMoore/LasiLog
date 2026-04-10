@@ -17,11 +17,15 @@ public class Main extends IndexingEngine {
 
     public static void main(String[] args) throws InterruptedException {
 
+        System.out.println("DEBUG: Guard Dog NOC Bridge - Optimization Branch Active");
+        System.out.println("DEBUG: Loading database history...");
+
         DatabaseEngine.initialize();
-        Runtime.getRuntime().addShutdownHook(new Thread(DatabaseEngine::close));
 
         // Restore previously saved logs into memory so the GUI can display them
         IndexingEngine.loadFromDatabase();
+
+        Runtime.getRuntime().addShutdownHook(new Thread(DatabaseEngine::close));
 
         // Using FlatDarkLaf for a modern look
         FlatDarkLaf.setup();
@@ -107,12 +111,30 @@ public class Main extends IndexingEngine {
         new javax.swing.Timer(500, e -> {
             GUI g = GUI.getMyGui();
             if (g != null) {
-                SwingUtilities.invokeLater(() -> {
-                    g.setHosts(HostIndex.keySet());
-                    g.refreshDisplay();
-                });
+                g.refreshDisplay();
+
+                // Keep the sidebar updated with live counts
+                g.getSidebar().applySidebarFilter();
             }
-            DatabaseEngine.commit();
+            // NEW: Push the SQLite disk I/O off the UI thread!
+            // Using a single background thread instead of spawning a new one every 500ms
+            DatabaseCommitTask.trigger();
         }).start();
+    }
+
+    private static class DatabaseCommitTask {
+        private static final java.util.concurrent.atomic.AtomicBoolean running = new java.util.concurrent.atomic.AtomicBoolean(false);
+
+        public static void trigger() {
+            if (running.compareAndSet(false, true)) {
+                new Thread(() -> {
+                    try {
+                        DatabaseEngine.commit();
+                    } finally {
+                        running.set(false);
+                    }
+                }, "db-commit").start();
+            }
+        }
     }
 }
