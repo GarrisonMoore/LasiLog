@@ -4,7 +4,7 @@ import GUI.GUI;
 import com.formdev.flatlaf.FlatDarkLaf;
 
 import javax.swing.*;
-import java.awt.Color;
+import java.awt.*;
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -75,6 +75,7 @@ public class Main extends IndexingEngine {
         } else {
             // 2. If no command line argument, open a GUI File Chooser
             JFileChooser fileChooser = new JFileChooser();
+            fileChooser.setPreferredSize(new Dimension(600, 600));
             fileChooser.setDialogTitle("Select Log File for Guard Dog NOC");
 
             // Defaulting the starting directory to /var/log since that's where your logs usually sit
