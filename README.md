@@ -6,7 +6,7 @@
 
 I. GETTING STARTED
 ----------------------
-Download and launch the executable - https://github.com/GarrisonMoore/GuardDog/releases/tag/1.0.1
+Download and launch the executable - https://github.com/GarrisonMoore/GuardDog/releases/download/1.0.1/GuardDogProcessor.jar
 
 Or launch via command line:
 #### Standard execution with file selector:
