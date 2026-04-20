@@ -13,7 +13,7 @@ import java.util.List;
  */
 public class DatabaseEngine {
 
-    private static final String DB_URL = "jdbc:sqlite:/home/admin/guarddog_logs.db";
+    private static final String DB_URL = "jdbc:sqlite:guarddog_logs.db";
     private static Connection connection;
 
     private static PreparedStatement insertPs;

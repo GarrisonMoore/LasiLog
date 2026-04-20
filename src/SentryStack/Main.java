@@ -1,6 +1,7 @@
 package SentryStack;
 
 import GUI.GUI;
+import GUI.SplashScreen;
 import com.formdev.flatlaf.FlatDarkLaf;
 
 import javax.swing.*;
@@ -59,26 +60,27 @@ public class Main {
         UIManager.put("ComboBox.background", new Color(35, 35, 35));
         UIManager.put("TextField.background", new Color(35, 35, 35));
 
-//        SplashScreen splash = new SplashScreen();
-//        splash.setVisible(true);
-//        splash.setIndeterminate(true);
+        SplashScreen splash = new SplashScreen();
+        splash.setVisible(true);
+        splash.setIndeterminate(true);
 
         // Database initialization
-//        splash.setStatus("Connecting to database...");
+        splash.setStatus("Connecting to database...");
         DatabaseEngine.initialize();
 
         // Restore previously saved logs into memory so the GUI can display them
-//        splash.setStatus("Loading recent logs...");
+        splash.setStatus("Loading recent logs...");
         IndexingEngine.loadFromDatabase((count, total) -> {
-//            splash.setMax(total);
-//            splash.setProgress(count);
-//            splash.setStatus("Loading logs: " + count + " / " + total);
+            splash.setIndeterminate(false);
+            splash.setMax(total);
+            splash.setProgress(count);
+            splash.setStatus("Loading logs: " + count + " / " + total);
         });
 
         System.out.println("DEBUG: Loaded " + IndexingEngine.getHostKeys().size() + " hosts and " + IndexingEngine.getAvailableDays().size() + " days from DB.");
 
-//        splash.setStatus("Finalizing startup...");
-//        splash.dispose();
+        splash.setStatus("Finalizing startup...");
+        splash.dispose();
 
         Runtime.getRuntime().addShutdownHook(new Thread(DatabaseEngine::close));
 
