@@ -2,8 +2,18 @@ package Interfaces;
 
 import SentryStack.LogObject;
 
+/**
+ * CategorizationMaster provides logic to classify log entries into various categories
+ * such as Security, Warnings, Network, etc., based on keywords in the log message.
+ */
 public class CategorizationMaster {
 
+    /**
+     * Categorizes a log object based on its message content.
+     *
+     * @param log The original log object.
+     * @return A new LogObject with updated severity and category, or null if the log is noise.
+     */
     public static LogObject categorize(LogObject log){
 
         Long timestamp = log.getTimestamp();

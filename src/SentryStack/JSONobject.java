@@ -1,6 +1,8 @@
 package SentryStack;
 
-///  example JSON object class
+/**
+ * JSONobject is a simple data structure used for parsing incoming JSON logs.
+ */
 public class JSONobject {
     private long timestamp;
     private String source;

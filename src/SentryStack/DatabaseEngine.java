@@ -7,12 +7,38 @@ import java.util.List;
  * SQLite persistence layer for Guard Dog logs.
  * Stores processed LogObjects so data survives restarts.
  */
+/**
+ * The DatabaseEngine handles SQLite persistence for log data.
+ * It provides methods to initialize the database, insert logs, and retrieve historical data.
+ */
 public class DatabaseEngine {
 
     private static final String DB_URL = "jdbc:sqlite:/home/admin/guarddog_logs.db";
     private static Connection connection;
 
     private static PreparedStatement insertPs;
+
+    /**
+     * Periodically commits pending log insertions to the database in a background thread.
+     */
+    public static class DatabaseCommitTask {
+        private static final java.util.concurrent.atomic.AtomicBoolean running = new java.util.concurrent.atomic.AtomicBoolean(false);
+
+        /**
+         * Triggers a database commit if one is not already in progress.
+         */
+        public static void trigger() {
+            if (running.compareAndSet(false, true)) {
+                new Thread(() -> {
+                    try {
+                        DatabaseEngine.commit();
+                    } finally {
+                        running.set(false);
+                    }
+                }, "db-commit").start();
+            }
+        }
+    }
 
     /**
      * Initialize the database and create the logs table if it doesn't exist.

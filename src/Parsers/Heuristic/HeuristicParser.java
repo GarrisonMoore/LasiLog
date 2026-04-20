@@ -15,6 +15,10 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * HeuristicParser is a flexible fallback parser that attempts to extract log data
+ * from formats not explicitly covered by other parsers.
+ */
 public class HeuristicParser implements ParserMaster {
 
     // The ^ forces it to match ONLY at the beginning of the string.
@@ -116,6 +120,11 @@ public class HeuristicParser implements ParserMaster {
         return CategorizationMaster.categorize(logObject);
     }
 
+    /**
+     * Determines if a token is likely to be a hostname or IP address.
+     * @param token The string to evaluate.
+     * @return True if the token resembles a network host.
+     */
     private boolean isLikelyHost(String token) {
         // Strip common brackets that might surround an IP/Host
         String cleanToken = token.replaceAll("[\\[\\]()=:]", "");

@@ -15,6 +15,10 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 
 
+/**
+ * The IndexingEngine manages in-memory data structures for fast retrieval of logs.
+ * It provides various indexes by source, severity, category, and time.
+ */
 public class IndexingEngine {
 
     // using a static ConcurrentHashMap to store the log objects
@@ -25,76 +29,22 @@ public class IndexingEngine {
     // using a static ConcurrentSkipListMap to store the log objects by time
     public static final ConcurrentSkipListMap<java.time.LocalDate, ConcurrentSkipListMap<java.time.LocalTime, Set<LogObject>>> TimeIndex = new ConcurrentSkipListMap<>();
 
-    // List of parsers to use
-    private static final List<ParserMaster> parsers = new ArrayList<>();
-
-    static {
-        parsers.add(new SyslogParser());
-        parsers.add(new JSONParser());
-        parsers.add(new BSDparser());
-        // Use HeuristicParser as the last parser to catch any remaining logs
-        parsers.add(new HeuristicParser());
-        // Add other parsers here as needed
-    }
-
-    // tail the log file in a separate thread
-    static void tailFile(Path file) {
-        try {
-            // make sure the file exists before we start reading
-            while (!Files.exists(file)) {
-                Thread.sleep(500);
-            }
-
-            // start reading from the end of the file by default to prevent memory exhaustion on large logs
-            try (RandomAccessFile raf = new RandomAccessFile(file.toFile(), "r")) {
-                long fileLength = raf.length();
-                // Seek to the end of the file. 
-                // To support a small amount of history (e.g., last 10KB), we could seek to fileLength - 10240
-                raf.seek(fileLength);
-
-                // read the file line by line as new content is appended
-                while (true) {
-                    String line = raf.readLine();
-                    // make sure we don't use a null line
-                    if (line == null) {
-                        if (raf.length() < raf.getFilePointer()) {
-                            // File was truncated
-                            raf.seek(0);
-                        } else {
-                            Thread.sleep(250);
-                        }
-                        continue;
-                    }
-
-                    // Decode ISO-8859-1 to UTF-8 (readLine uses ISO-8859-1)
-                    line = new String(line.getBytes(java.nio.charset.StandardCharsets.ISO_8859_1), java.nio.charset.StandardCharsets.UTF_8);
-
-                    // Try each parser
-                    for (ParserMaster parser : parsers) {
-                        if (parser.canParse(line)) {
-                            LogObject log = parser.parse(line);
-                            if (log != null) {
-                                indexLog(log);
-                                // update GUI.GUI
-                                if (GUI.getMyGui() != null) {
-                                    GUI.getMyGui().appendLiveLog(log);
-                                }
-                                break; // Found a parser, move to next line
-                            }
-                        }
-                    }
-                }
-            }
-        } catch (Exception e) { // catch any exceptions that might occur
-            System.err.println("Log tail stopped: " + e.getMessage());
-        }
-    }
-
-    private static void indexLog(LogObject logObject) {
+    /**
+     * Adds a log object to all applicable in-memory indexes and optionally persists it to the database.
+     *
+     * @param logObject The log object to index.
+     */
+    public static void indexLog(LogObject logObject) {
         indexLog(logObject, true);
     }
 
-    private static void indexLog(LogObject logObject, boolean persist) {
+    /**
+     * Adds a log object to all applicable in-memory indexes.
+     *
+     * @param logObject The log object to index.
+     * @param persist   True if the log should be saved to the database.
+     */
+    public static void indexLog(LogObject logObject, boolean persist) {
         try {
             java.time.LocalDateTime dateTime = java.time.LocalDateTime.ofInstant(
                     java.time.Instant.ofEpochSecond(logObject.getTimestamp()),
@@ -129,19 +79,34 @@ public class IndexingEngine {
         }
     }
 
-    // helper to get logs by severity
+    /**
+     * Retrieves all logs for a given severity level.
+     *
+     * @param level The severity level (e.g., "CRIT", "WARN").
+     * @return A list of log objects with the matching severity.
+     */
     public static List<LogObject> getLogsBySeverity(String level) {
         if (level == null) return new ArrayList<>();
         return new ArrayList<>(SeverityIndex.getOrDefault(level.toUpperCase(), Collections.emptySet()));
     }
 
-    // helper to get logs by category
+    /**
+     * Retrieves all logs for a given category.
+     *
+     * @param category The category name.
+     * @return A list of log objects in that category.
+     */
     public static List<LogObject> getLogsByCategory(String category) {
         if (category == null) return new ArrayList<>();
         return new ArrayList<>(CategoryIndex.getOrDefault(category.toUpperCase(), Collections.emptySet()));
     }
 
-    // helper to get logs by day
+    /**
+     * Retrieves all logs for a specific day.
+     *
+     * @param day The date to retrieve logs for.
+     * @return A list of log objects for that day.
+     */
     public static List<LogObject> getLogsByDay(java.time.LocalDate day) {
         List<LogObject> results = new ArrayList<>();
         ConcurrentSkipListMap<java.time.LocalTime, Set<LogObject>> byTime = TimeIndex.get(day);
@@ -153,7 +118,14 @@ public class IndexingEngine {
         return results;
     }
 
-    // helper to get logs by day and time
+    /**
+     * Retrieves logs for a specific day within a given time range.
+     *
+     * @param day   The date.
+     * @param start The start time.
+     * @param end   The end time.
+     * @return A list of log objects in the specified range.
+     */
     public static List<LogObject> getLogsByDayAndTime(java.time.LocalDate day,
                                                       java.time.LocalTime start,
                                                       java.time.LocalTime end) {
@@ -176,24 +148,42 @@ public class IndexingEngine {
         DatabaseEngine.loadRecentLogs(24 * 365, log -> indexLog(log, false), progressCallback);
     }
 
-    // helper to show available days
+    /**
+     * Returns a set of all days for which logs are indexed.
+     *
+     * @return A set of LocalDates.
+     */
     public static Set<java.time.LocalDate> getAvailableDays() {
         return TimeIndex.keySet();
     }
 
-    // helper to show available times for a given day
+    /**
+     * Returns a set of all times (rounded to minutes) for which logs exist on a specific day.
+     *
+     * @param day The date to check.
+     * @return A set of LocalTimes.
+     */
     public static Set<java.time.LocalTime> getAvailableTimes(java.time.LocalDate day) {
         ConcurrentSkipListMap<java.time.LocalTime, Set<LogObject>> byTime = TimeIndex.get(day);
         return byTime != null ? byTime.keySet() : Collections.emptySet();
     }
 
-    // helper to get logs for a given host
+    /**
+     * Retrieves all logs for a specific host.
+     *
+     * @param host The hostname or source.
+     * @return A list of log objects from that host.
+     */
     public static List<LogObject> getLogsForHost(String host) {
         if (host == null) return new ArrayList<>();
         return new ArrayList<>(HostIndex.getOrDefault(host, Collections.emptySet()));
     }
 
-    // helper to get available host keys
+    /**
+     * Returns a set of all unique hosts/sources found in the indexed logs.
+     *
+     * @return A set of hostnames.
+     */
     public static Set<String> getHostKeys() {
         return HostIndex.keySet();
     }

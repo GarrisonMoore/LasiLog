@@ -14,6 +14,9 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 
+/**
+ * JSONParser implements the ParserMaster interface to extract log data from JSON-formatted strings.
+ */
 public class JSONParser implements ParserMaster {
 
     int JSON_LOG_COUNT = 0;

@@ -4,6 +4,9 @@ import javax.swing.*;
 import java.awt.*;
 
 
+/**
+ * ReadmeGUI displays the application documentation in a graphical window.
+ */
 public class ReadmeGUI {
 
     // Colors for GUI.GUI

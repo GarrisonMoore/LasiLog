@@ -14,6 +14,10 @@ import java.util.List;
 import java.util.Set;
 import java.util.Collections;
 
+/**
+ * The main GUI window for the Guard Dog NOC Bridge application.
+ * Manages the layout and coordination between various UI panels.
+ */
 public class GUI extends JFrame {
     private static GUI myGui;
 

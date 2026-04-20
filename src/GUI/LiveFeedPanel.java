@@ -8,6 +8,9 @@ import java.awt.*;
 import java.util.ArrayDeque;
 import java.util.Deque;
 
+/**
+ * LiveFeedPanel displays a scrolling, filterable table of logs as they arrive in real-time.
+ */
 public class LiveFeedPanel extends JPanel {
     // 1. Update the Model to AbstractTableModel (High Performance)
     private final java.util.List<Object[]> currentTableData = new java.util.ArrayList<>();

@@ -11,6 +11,9 @@ import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * BSDparser implements the ParserMaster interface for logs in the traditional BSD syslog format.
+ */
 public class BSDparser implements ParserMaster {
 
     // BSD syslog: "Apr  1 12:34:56 hostname message"
@@ -83,6 +86,11 @@ public class BSDparser implements ParserMaster {
         return CategorizationMaster.categorize(logObject);
     }
 
+    /**
+     * Validates if the host string is a plausible network identifier.
+     * @param host The hostname or IP to check.
+     * @return True if it appears to be a valid host.
+     */
     private boolean isValidHost(String host) {
         if (host == null) return false;
         String h = host.trim();

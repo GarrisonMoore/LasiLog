@@ -5,6 +5,9 @@ import java.awt.*;
 import java.awt.event.ActionListener;
 import javax.swing.event.DocumentListener;
 
+/**
+ * TopBarPanel provides a search and control area at the top of the GUI.
+ */
 public class TopBarPanel extends JPanel {
     private final JComboBox<String> pivotBox = new JComboBox<>(new String[]{"Hostnames", "Category", "Severity", "Time"});
     private final JButton pauseLiveFeedButton = new JButton("Pause Live Feed");

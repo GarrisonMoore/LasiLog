@@ -10,6 +10,10 @@ import java.awt.event.ActionListener;
 import java.time.LocalDate;
 import java.time.LocalTime;
 
+/**
+ * SidebarPanel provides navigation and filtering controls for the application.
+ * Users can pivot between hosts, severities, categories, and time ranges.
+ */
 public class SidebarPanel extends JPanel {
     private final DefaultListModel<String> listModel = new DefaultListModel<>();
     private final JList<String> hostList = new JList<>(listModel);

@@ -1,10 +1,13 @@
 package SentryStack;
 
+/**
+ * LogObject represents a single structured log entry.
+ */
 public class LogObject {
     private final long timestamp;
     private final String source;
-    private final String severity;
-    private final String category;
+    private String severity;
+    private String category;
     private final String pid;
     private final String message;
 
@@ -42,12 +45,20 @@ public class LogObject {
         return severity;
     }
 
-    public String setSeverity(String severity){
-        return severity;
+    /**
+     * Sets the severity of the log entry.
+     * @param severity The new severity level.
+     */
+    public void setSeverity(String severity){
+        this.severity = severity;
     }
 
-    public String setCategory(String category){
-        return category;
+    /**
+     * Sets the category of the log entry.
+     * @param category The new category.
+     */
+    public void setCategory(String category){
+        this.category = category;
     }
 
     @Override

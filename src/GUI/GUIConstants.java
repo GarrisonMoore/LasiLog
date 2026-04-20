@@ -2,6 +2,10 @@ package GUI;
 
 import java.awt.*;
 
+/**
+ * GUIConstants defines shared colors, fonts, and other UI-related constants
+ * to ensure a consistent look and feel across the application.
+ */
 public class GUIConstants {
     public static final Color ACCENT_COLOR = new Color(0, 150, 255); // Electric Blue
     public static final Color PANEL_BG = new Color(25, 25, 25);

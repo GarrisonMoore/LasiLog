@@ -9,6 +9,9 @@ import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * SyslogParser implements the ParserMaster interface to parse logs in RFC 5424 format.
+ */
 public class SyslogParser implements ParserMaster {
 
     // Matches true RFC-5424 format:
@@ -114,6 +117,11 @@ public class SyslogParser implements ParserMaster {
         return CategorizationMaster.categorize(logObject);
     }
 
+    /**
+     * Validates if the hostname or source in the log is a valid network identifier.
+     * @param host The hostname or IP address to validate.
+     * @return True if it matches valid host patterns.
+     */
     private boolean isValidHost(String host) {
         if (host == null) return false;
         String h = host.trim();
