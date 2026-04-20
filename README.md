@@ -1,75 +1,130 @@
-# Guard Dog NOC Bridge
+================================================================================
+            PROJECT: SENTRYSTACK | THE "GUARD DOG" UNIVERSAL ANALYST
+================================================================================
+Primary Architect : Garrison
+Build Environment : OpenJDK 21 / FlatLaf / SQLite 3 / GSON
+System Status     : Operational - Version 1.0.0
+--------------------------------------------------------------------------------
 
-**Guard Dog NOC Bridge** is a high-performance Java application designed to process, index, and visualize system logs in real-time. Built as a specialized Network Operations Center (NOC) tool, it allows for seamless monitoring of large-scale log streams with advanced filtering, categorization, and historical browsing capabilities.
-
----
-
-## Overview
-The application acts as a bridge between raw log files (e.g., `/var/log/syslog`) and a structured monitoring interface. It tails logs as they are written, passes them through a sophisticated multi-parser engine, and indexes them into memory for instant querying. All processed logs are persisted to an embedded SQLite database, ensuring data longevity across application restarts.
-
----
-
-##  Design Choices
-
-### 1. Multi-Parser Architecture
-The engine uses a chain-of-responsibility pattern for log parsing. Each raw line is tested against multiple parsers:
-- **SyslogParser (RFC-5424):** Handles modern structured syslog formats.
-- **JSONParser:** Decodes structured logs emitted by modern applications and microservices.
-- **BSDParser:** Supports legacy RFC-3164 formats.
-- **HeuristicParser:** A fallback mechanism that uses pattern matching to extract useful data from non-standard logs.
-
-### 2. Intelligent Categorization
-Beyond simple parsing, the `CategorizationMaster` analyzes log messages to assign:
-- **Severity Levels:** Maps keywords (e.g., `fatal`, `crit`, `error`, `warn`) to standardized levels.
-- **Functional Categories:** Groups logs into domains like `Security`, `Network`, `Auth & Access`, and `System Services`.
-- **Noise Filtering:** Automatically discards high-volume, low-value "noise" logs to keep the operator's view focused on critical events.
-
-### 3. Dual-Layer Storage (In-Memory + Disk)
-- **In-Memory Indexing:** Uses `ConcurrentHashMap` and `ConcurrentSkipListMap` to provide O(1) and O(log N) retrieval for live filtering by Host, Severity, Category, and Time.
-- **SQLite Persistence:** Provides a robust backend for historical data. The application loads the last 14 days of logs into memory on startup for immediate browsing.
-
----
-
-## Optimizations & Performance
-
-### 1. Non-Blocking I/O & Threading
-- **Background Tailing:** The `LogTailer` runs in a dedicated daemon thread, ensuring that log ingestion never blocks the user interface.
-- **Asynchronous Database Commits:** Instead of writing to disk for every log (which is slow in SQLite), the `DatabaseCommitTask` batches insertions and flushes them to disk on a background thread every 500ms. This prevents "UI stutter" during high-volume log bursts.
-
-### 2. Efficient Data Structures
-- **Concurrent Skip Lists:** Used for the `TimeIndex` to allow for efficient range queries (e.g., "show me logs between 2:00 PM and 3:00 PM") while remaining thread-safe for live updates.
-- **Memory Management:** The application starts tailing from the *end* of files by default and limits the initial database load to the most recent 14 days to keep the memory footprint lean.
-
-### 3. Modern UI with FlatLaf
-Utilizes the **FlatLaf (Flat Dark)** look-and-feel with custom UI tweaks (rounded arcs, electric blue accents) to provide a professional, dark-mode-native experience suitable for NOC environments.
-
----
-
-## Getting Started
-
-### Prerequisites
-- **Java 21** or higher.
-- Included libraries: `flatlaf-3.4.1.jar`, `gson-2.13.2.jar`, `sqlite-jdbc-3.51.3.0.jar`.
-
-### Running the Application
+I. GETTING STARTED
+----------------------
 
 Download and run the jar file - https://github.com/GarrisonMoore/GuardDog/releases/tag/1.0.1
 
 Or you can launch the application by passing a log file as an argument or by using the built-in file chooser:
 
-```bash
-# Via Command Line
-java -jar GuardDogProcessor.jar /path/to/your/log/file.log
+Launch via Command Line:
+   java -jar GuardDogProcessor.jar /path/to/log.file
 
-# Or simply run and use the GUI to browse:
-java -jar GuardDogProcessor.jar
-```
+Standard execution:
+   java -jar GuardDogProcessor.jar
+   (Use the file chooser to select a log source)
 
----
 
-## Project Structure
-- `SentryStack/`: Core logic (Main, Indexing, Database, Tailer).
-- `GUI/`: Swing-based user interface components.
-- `Parsers/`: Specialized parsing logic for different log formats.
-- `Interfaces/`: Common contracts for parsers and categorization.
-- `lib/`: Third-party dependencies.
+II. OPERATIONAL MISSION
+-----------------------
+In modern network environments, telemetry arrives in a chaotic variety of
+formats—syslog, JSON, BSD, and unstructured plain text. Manual configuration
+of regex patterns for every new log source creates a "Latency Gap" in incident
+response.
+
+The SentryStack (Guard Dog) is engineered to bridge this gap. It serves as
+a high-performance, agnostic ingestion engine that utilizes a chain-of-responsibility
+multi-parser architecture to normalize raw data streams into a unified, searchable
+Network Operations Center (NOC) dashboard.
+
+
+III. SYSTEM SPECIFICATIONS
+--------------------------
+* CORE ENGINE     : Java-based multi-threaded processing.
+* INTERFACE       : FlatLaf-integrated Swing GUI (GUI.java).
+* PERSISTENCE     : SQLite JDBC for asynchronous historical logging.
+* MEMORY MGMT     : ConcurrentSkipListMap for sub-millisecond table indexing.
+* DATA FORMATS    : RFC 5424 (Syslog), JSON, BSD (RFC 3164), and Unstructured Heuristics.
+* DEPENDENCIES    : flatlaf-3.4.1.jar, gson-2.13.2.jar, sqlite-jdbc-3.51.3.0.jar.
+
+
+IV. ARCHITECTURAL TIER BREAKDOWN
+----------------------------------
+
+1. INGESTION & DATA ACQUISITION
+   The system supports dual-path ingestion to handle both real-time telemetry
+   and forensic file analysis.
+
+    - THE LIVE SINK: A multi-threaded TCP listener (Main.java) designed to
+      ingest high-velocity streams from forwarders like NXLog.
+    - THE FILE BRIDGE: An integrated file explorer within the GUI that
+      allows analysts to "tail" and process any local text file (LogTailer.java).
+
+2. THE "MULTI-PARSER" PIPELINE
+   SentryStack utilizes an intelligent, layered parsing hierarchy (ParserMaster.java)
+   to ensure zero-drop telemetry:
+
+    - SYSLOG LAYER  : SyslogParser.java (RFC 5424) for modern structured logs.
+    - JSON MODULE   : JSONParser.java for structured application payloads.
+    - BSD MODULE    : BSDparser.java (RFC 3164) for legacy network gear.
+    - HEURISTIC LAYER: HeuristicParser.java fallback that scans for date patterns
+      and common delimiters to "guess" the structure of unknown logs.
+
+3. DYNAMIC CATEGORIZATION & ENRICHMENT
+   Incoming data is processed through the CategorizationMaster.java to
+   automatically assign functional tags (e.g., Security, Network, Auth & Access)
+   and normalized severity levels (CRIT, WARN, INFO).
+
+4. HYBRID STORAGE STRATEGY (DUAL-LAYER)
+    - VOLATILE INDEX: IndexingEngine.java manages an in-memory datastore using
+      ConcurrentHashMap and SkipListMaps for instantaneous GUI filtering.
+    - DISK PERSISTENCE: DatabaseEngine.java ensures every processed 'LogObject'
+      is committed to 'guarddog_logs.db' using asynchronous batching to 
+      prevent UI latency.
+
+
+V. PERFORMANCE & OPTIMIZATIONS
+--------------------------------
+- BACKGROUND TAILING: Log ingestion runs in a dedicated daemon thread to
+  ensure UI responsiveness during high-volume bursts.
+- ASYNCHRONOUS COMMITS: The 'DatabaseCommitTask' batches SQLite I/O operations
+  every 500ms on a background thread, eliminating disk-write stutter.
+- EFFICIENT INDEXING: Concurrent Skip Lists allow O(log N) range queries
+  (e.g., time-based slicing) without locking the main thread.
+- MODERN UI ENGINE: Utilizes FlatLaf (Dark Mode) with custom arc tweaks
+  and electric blue accents for high-visibility NOC environments.
+
+
+VI. OPERATIONAL PROTOCOLS
+-------------------------
+1. INITIALIZATION: Execute Main.java. The system automatically verifies
+   database connectivity and initializes the UI.
+2. SOURCE SELECTION: Pass a log file as a command-line argument or use the
+   GUI File Chooser to select a target for tailing.
+3. ANALYSIS: Utilize the Search and Sidebar filters to isolate specific
+   Critical or Security events within the unified feed.
+4. ARCHIVAL: Historical data is automatically indexed; the system loads the
+   last 14 days of logs into memory on startup for immediate browsing.
+
+
+VII. PROJECT METRICS (CODEBASE)
+------------------------------
+* TOTAL FILES     : 22 Java Classes
+* TOTAL LINES     : 3,149 Lines of Code
+* TOTAL CHARS     : 118,235 Characters
+--------------------------------------------------------------------------------
+| PACKAGE         | CLASSES | TOTAL LINES | TOTAL CHARS |
+|-----------------|:-------:|:-----------:|:-----------:|
+| GUI             |    7    |    1,313    |    50,744   |
+| SentryStack     |    7    |      890    |    34,320   |
+| Parsers         |    4    |      553    |    22,878   |
+| Interfaces      |    4    |      193    |    10,293   |
+--------------------------------------------------------------------------------
+
+
+VIII. FUTURE DEPLOYMENT ROADMAP
+------------------------------
+* DECRYPTOR INTEGRATION: Activation of the DecryptorMaster.java interface
+  for handling encrypted or obfuscated log payloads.
+* ADVANCED HEURISTICS: Refined pattern recognition for proprietary
+  industrial and medical data formats.
+* NETWORK TOPOLOGY VIEW: Visual mapping of log frequency per-host to
+  identify anomaly spikes.
+
+================================================================================
