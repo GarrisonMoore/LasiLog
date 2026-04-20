@@ -121,5 +121,3 @@ VIII. FUTURE DEPLOYMENT ROADMAP
   industrial and medical data formats.
 * NETWORK TOPOLOGY VIEW: Visual mapping of log frequency per-host to
   identify anomaly spikes.
-
-================================================================================
