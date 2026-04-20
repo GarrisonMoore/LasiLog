@@ -69,9 +69,9 @@ IV. ARCHITECTURAL TIER BREAKDOWN
    and normalized severity levels (CRIT, WARN, INFO).
 
 4. HYBRID STORAGE STRATEGY (DUAL-LAYER)
-    - VOLATILE INDEX: IndexingEngine.java manages an in-memory datastore using
+    - HOT STORAGE: IndexingEngine.java manages an in-memory datastore using
       ConcurrentHashMap and SkipListMaps for instantaneous GUI filtering.
-    - DISK PERSISTENCE: DatabaseEngine.java ensures every processed 'LogObject'
+    - COLD STORAGE: DatabaseEngine.java ensures every processed 'LogObject'
       is committed to 'guarddog_logs.db' using asynchronous batching to 
       prevent UI latency.
 
