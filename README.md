@@ -6,16 +6,14 @@
 
 I. GETTING STARTED
 ----------------------
-
-### Download the executable - https://github.com/GarrisonMoore/GuardDog/releases/tag/1.0.1
-
-#### You can launch the application by passing a log file as an argument or by using the built-in file chooser:
+Launch the application to begin monitoring. You can specify a log file via
+command line or use the built-in file chooser upon startup.
 
 #### Standard execution:
 ```bash
 java -jar GuardDogProcessor.jar
 ```         
-#### Launch via Command Line:
+#### Launch with target log:
 ```bash
 java -jar GuardDogProcessor.jar /path/to/log.file
 ```
@@ -47,13 +45,13 @@ IV. ARCHITECTURAL TIER BREAKDOWN
 ----------------------------------
 
 1. INGESTION & DATA ACQUISITION
-   The system supports dual-path ingestion to handle both real-time telemetry
-   and forensic file analysis.
+   The system is built for reactive telemetry processing, focusing on 
+   high-fidelity log tailing.
 
-    - THE LIVE SINK: A multi-threaded TCP listener (Main.java) designed to
-      ingest high-velocity streams from forwarders like NXLog.
-    - THE FILE BRIDGE: An integrated file explorer within the GUI that
-      allows analysts to "tail" and process any local text file (LogTailer.java).
+    - THE FILE BRIDGE: An integrated file explorer and command-line entry
+      point (Main.java) that allows analysts to target any local text file.
+    - BACKGROUND TAILER: A dedicated daemon thread (LogTailer.java) that
+      monitors file growth and processes new entries in real-time.
 
 2. THE "MULTI-PARSER" PIPELINE
    SentryStack utilizes an intelligent, layered parsing hierarchy (ParserMaster.java)
@@ -80,8 +78,6 @@ IV. ARCHITECTURAL TIER BREAKDOWN
 
 V. PERFORMANCE & OPTIMIZATIONS
 --------------------------------
-- BACKGROUND TAILING: Log ingestion runs in a dedicated daemon thread to
-  ensure UI responsiveness during high-volume bursts.
 - ASYNCHRONOUS COMMITS: The 'DatabaseCommitTask' batches SQLite I/O operations
   every 500ms on a background thread, eliminating disk-write stutter.
 - EFFICIENT INDEXING: Concurrent Skip Lists allow O(log N) range queries
