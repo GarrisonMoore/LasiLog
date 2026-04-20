@@ -52,9 +52,10 @@ Utilizes the **FlatLaf (Flat Dark)** look-and-feel with custom UI tweaks (rounde
 - Included libraries: `flatlaf-3.4.1.jar`, `gson-2.13.2.jar`, `sqlite-jdbc-3.51.3.0.jar`.
 
 ### Running the Application
+
 Download and run the jar file - https://github.com/GarrisonMoore/GuardDog/releases/tag/1.0.1
-or
-You can launch the application by passing a log file as an argument or by using the built-in file chooser:
+
+Or you can launch the application by passing a log file as an argument or by using the built-in file chooser:
 
 ```bash
 # Via Command Line
