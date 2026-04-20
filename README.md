@@ -1,25 +1,24 @@
-================================================================================
-            PROJECT: SENTRYSTACK | THE "GUARD DOG" UNIVERSAL ANALYST
-================================================================================
-Primary Architect : Garrison
-Build Environment : OpenJDK 21 / FlatLaf / SQLite 3 / GSON
-System Status     : Operational - Version 1.0.0
+# PROJECT: THE "GUARD DOG" SEIM
+### Primary Architect : Garrison
+### Build Environment : OpenJDK 21 / FlatLaf / SQLite 3 / GSON
+### System Status     : Operational - Version 1.0.1
 --------------------------------------------------------------------------------
 
 I. GETTING STARTED
 ----------------------
 
-Download and run the jar file - https://github.com/GarrisonMoore/GuardDog/releases/tag/1.0.1
+### Download the executable - https://github.com/GarrisonMoore/GuardDog/releases/tag/1.0.1
 
-Or you can launch the application by passing a log file as an argument or by using the built-in file chooser:
+You can launch the application by passing a log file as an argument or by using the built-in file chooser:
 
-Launch via Command Line:
-   java -jar GuardDogProcessor.jar /path/to/log.file
-
-Standard execution:
-   java -jar GuardDogProcessor.jar
-   (Use the file chooser to select a log source)
-
+### Standard execution:
+```bash
+java -jar GuardDogProcessor.jar
+```         
+### Launch via Command Line:
+```bash
+java -jar GuardDogProcessor.jar /path/to/log.file
+```
 
 II. OPERATIONAL MISSION
 -----------------------
