@@ -145,7 +145,9 @@ public class IndexingEngine {
      * Defaulting to 1 year of logs to ensure older records are available for browsing.
      */
     public static void loadFromDatabase(java.util.function.BiConsumer<Integer, Integer> progressCallback) {
-        DatabaseEngine.loadRecentLogs(24 * 365, log -> indexLog(log, false), progressCallback);
+        // Reduced from 1 year to 14 days to save memory on startup.
+        // The user can still tail logs or we could add a way to load more on demand.
+        DatabaseEngine.loadRecentLogs(24 * 14, log -> indexLog(log, false), progressCallback);
     }
 
     /**

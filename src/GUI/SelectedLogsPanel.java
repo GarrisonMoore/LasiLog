@@ -21,12 +21,24 @@ public class SelectedLogsPanel extends JPanel {
 
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
-    private final DefaultTableModel logTableModel = new DefaultTableModel(
-            new Object[]{"Timestamp", "Host", "Severity", "Category", "PID", "Message"}, 0
-    ) {
-        @Override
-        public boolean isCellEditable(int row, int column) {
-            return false;
+    private final java.util.List<LogObject> currentLogs = new java.util.ArrayList<>();
+    private final String[] columnNames = {"Timestamp", "Host", "Severity", "Category", "PID", "Message"};
+
+    private final javax.swing.table.AbstractTableModel logTableModel = new javax.swing.table.AbstractTableModel() {
+        @Override public int getRowCount() { return currentLogs.size(); }
+        @Override public int getColumnCount() { return columnNames.length; }
+        @Override public String getColumnName(int col) { return columnNames[col]; }
+        @Override public Object getValueAt(int row, int col) {
+            LogObject log = currentLogs.get(row);
+            return switch (col) {
+                case 0 -> formatTimestamp(log);
+                case 1 -> log.getSource();
+                case 2 -> log.getSeverity();
+                case 3 -> log.getCategory();
+                case 4 -> log.getPid();
+                case 5 -> log.getMessage();
+                default -> null;
+            };
         }
     };
 
@@ -134,40 +146,22 @@ public class SelectedLogsPanel extends JPanel {
         lastFilter = filter;
 
         // --- 1. THE SNAPSHOT LIST ---
-        // We make a quick copy of the incoming 'logs' to prevent the
-        // background thread from crashing the UI if it adds a new log right now.
-        List<LogObject> snapshotList = new ArrayList<>(logs);
-
-        // --- 2. UI OPTIMIZATION ---
-        // Build a temporary 2D array to hold the data so we only update the table ONCE
-        Object[][] tableData = new Object[snapshotList.size()][6];
-        int addedCount = 0;
-
-        for (LogObject log : snapshotList) {
+        // We filter the incoming 'logs' and update our internal list.
+        currentLogs.clear();
+        for (LogObject log : logs) {
             if (filter.isEmpty() ||
                     log.getMessage().toLowerCase().contains(filter) ||
                     log.getSource().toLowerCase().contains(filter) ||
                     log.getCategory().toLowerCase().contains(filter) ||
                     log.getSeverity().toLowerCase().contains(filter)) {
-
-                tableData[addedCount] = new Object[]{
-                        formatTimestamp(log),  // (Make sure you also added the static DATE_FORMATTER fix for this!)
-                        log.getSource(),
-                        log.getSeverity(),
-                        log.getCategory(),
-                        log.getPid(),
-                        log.getMessage()
-                };
-                addedCount++;
+                currentLogs.add(log);
             }
         }
-        // Trim the array to exact size if the filter removed anything
-        Object[][] finalData = java.util.Arrays.copyOf(tableData, addedCount);
 
         // Push all data to the UI at exactly the same time. This fires only ONE event!
-        logTableModel.setDataVector(finalData, new Object[]{"Timestamp", "Host", "Severity", "Category", "PID", "Message"});
+        ((javax.swing.table.AbstractTableModel)logTableModel).fireTableDataChanged();
 
-        // Re-apply column sizing if setDataVector overwrites them
+        // Re-apply column sizing if needed
         selectedLogTable.getColumnModel().getColumn(5).setPreferredWidth(600);
     }
 
@@ -190,7 +184,8 @@ public class SelectedLogsPanel extends JPanel {
         lastFilter = "";
 
         // Instantly wipe the table model to detach the old data from the UI
-        logTableModel.setRowCount(0);
+        currentLogs.clear();
+        ((javax.swing.table.AbstractTableModel)logTableModel).fireTableDataChanged();
     }
 
     /**

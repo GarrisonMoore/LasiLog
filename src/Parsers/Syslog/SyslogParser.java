@@ -33,6 +33,10 @@ public class SyslogParser implements ParserMaster {
     @Override
     public LogObject parse(String rawline) {
 
+        if (rawline.contains("the locale specific resource for the desired message is not present")) {
+            return null;
+        }
+
         if (rawline == null || rawline.isBlank()) {
             System.out.println("DEBUG DROP [RCF5424] - Blank or Null line received.");
             return null;

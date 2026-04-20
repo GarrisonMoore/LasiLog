@@ -22,10 +22,10 @@ public class LogObject {
      */
     public LogObject(long timestamp, String source, String severity, String category, String pid, String message) {
         this.timestamp = timestamp;
-        this.source = source;
-        this.severity = severity;
-        this.category = category;
-        this.pid = pid;
+        this.source = source != null ? source.intern() : null;
+        this.severity = severity != null ? severity.intern() : null;
+        this.category = category != null ? category.intern() : null;
+        this.pid = pid != null ? pid.intern() : null;
         this.message = message;
     }
 
@@ -83,7 +83,7 @@ public class LogObject {
      * @param severity The new severity level.
      */
     public void setSeverity(String severity){
-        this.severity = severity;
+        this.severity = severity != null ? severity.intern() : null;
     }
 
     /**
@@ -91,7 +91,7 @@ public class LogObject {
      * @param category The new category.
      */
     public void setCategory(String category){
-        this.category = category;
+        this.category = category != null ? category.intern() : null;
     }
 
     @Override
