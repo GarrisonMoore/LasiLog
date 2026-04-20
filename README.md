@@ -6,10 +6,10 @@
 
 I. GETTING STARTED
 ----------------------
-Launch the application to begin monitoring. You can specify a log file via
-command line or use the built-in file chooser upon startup.
+Download and launch the executable - https://github.com/GarrisonMoore/GuardDog/releases/tag/1.0.1
 
-#### Standard execution:
+Or launch via command line:
+#### Standard execution with file selector:
 ```bash
 java -jar GuardDogProcessor.jar
 ```         
