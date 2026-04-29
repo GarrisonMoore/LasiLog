@@ -6,7 +6,7 @@
 
 I. GETTING STARTED
 ----------------------
-Download and launch the executable - https://github.com/GarrisonMoore/LasiLog/releases/download/1.0.1/LasiLog.jar
+Download and launch the executable - https://github.com/GarrisonMoore/LasiLog/releases/download/1.0.1/LasiLog-v1.0.1.jar
 
 Or launch via command line:
 #### Standard execution with file selector:
