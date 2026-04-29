@@ -1,4 +1,4 @@
-# PROJECT: THE "GUARD DOG" SIEM
+# PROJECT: "LasiLog" SIEM / SOAR
 ### Primary Architect : Garrison
 ### Build Environment : OpenJDK 21 / FlatLaf / SQLite 3 / GSON
 ### System Status     : Operational - Version 1.0.1
