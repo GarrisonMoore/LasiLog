@@ -30,8 +30,8 @@ In a world of siloed log tools and performance bottlenecks, LasiLog delivers a c
 | In-Memory Indexing (No disk I/O)          | 970.40 MB/s | 3,273,582.17 logs/sec | 165.51 MB  | 3.05s    |
 | Full Engine Persistence (SQLite Batching) | 100.35 MB/s | 330,018.67 logs/sec   | 761.54 MB  | 30.30s   |
 
-Don't believe the numbers? Download LasiBench and stress-test the engine on your own hardware! 
-[LasiBench.jar](https://github.com/GarrisonMoore/LasiLog/releases/download/1.0.1/LasiBench.jar) (v1.0.1)
+#### Don't believe the numbers? Download LasiBench and stress-test the engine on your own hardware! 
+#### Direct download - [LasiBench.jar](https://github.com/GarrisonMoore/LasiLog/releases/download/1.0/LasiBench.jar)
 ---
 
 # Getting Started
