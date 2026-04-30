@@ -40,7 +40,7 @@ Don't believe the numbers? Download LasiBench and stress-test the engine on your
 
 ### **1. Download and Launch Executable**
 
-Download the latest version: [LasiLogProcessor.jar](https://github.com/GarrisonMoore/LasiLog/releases/download/1.0.1/LasiLogProcessor.jar)
+Download the latest version: [LasiLog.jar](https://github.com/GarrisonMoore/LasiLog/releases/download/1.0.1/LasiLog-v1.0.1.jar) (v1.0.1)
 
 ### **2. Launch via Command Line**
 
