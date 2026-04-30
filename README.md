@@ -1,32 +1,48 @@
 # LasiLog: SIEM / SOAR
 
+---
 ## Project Overview
 
 *   **Primary Architect:** Garrison
 *   **Build Environment:** OpenJDK 21 / FlatLaf / SQLite 3 / GSON
 *   **System Status:** Operational - Version 1.0.1
+---
 
 ## Why LasiLog is Different
 
-In a world of siloed log tools and performance bottlenecks, LasiLog delivers a complete solution. LasiLog eliminates the 'Legacy Bottleneck' by providing a single, high-performance ingestion engine that seamlessly normalizes diverse data streams and delivers a unified, lag-free Network Operations Center (NOC) experience.
+
+In a world of siloed log tools and performance bottlenecks, LasiLog delivers a complete solution. We eliminate the 'Legacy Bottleneck' by providing a single, high-performance ingestion engine that handles:
+
+1. Zero Footprint: The entire engine is contained within a single 15MB executable JAR. No heavy installers, no service bloat.
+
+2. Unrivaled Speed: Built for extreme telemetry environments, processing up to 3.2 million logs per second (see benchmarks below).
+
+3. Rapid Deployment: Zero manual configuration or environment setup. Point the engine at a log source and start analyzing in seconds.
+
+4. System Agnostic: Pure JVM power. Deploy on Windows, Debian, or specialized hardware with zero compatibility friction.
+
+5. Agnostic Normalization: Our chain-of-responsibility multi-parser automatically translates JSON, Syslog, and legacy BSD streams into a unified, searchable NOC feed.
 
 ### Benchmark Results
 
-| Benchmark | Throughput | Event Rate | Duration |
-| :--- | :--- | :--- | :--- |
-| In-Memory Indexing (No disk I/O) | 847.67 MB/s | 2,530,508 logs/sec | 3.95s |
-| Full Engine Persistence (SQLite Batching) | 71.78 MB/s | 209,513 logs/sec | 47.73s |
+| Benchmark                                 | Throughput  | Event Rate            | Heap Usage | Duration |
+|:------------------------------------------|:------------|:----------------------|:-----------|:---------|
+| In-Memory Indexing (No disk I/O)          | 970.40 MB/s | 3,273,582.17 logs/sec | 165.51 MB  | 3.05s    |
+| Full Engine Persistence (SQLite Batching) | 100.35 MB/s | 330,018.67 logs/sec   | 761.54 MB  | 30.30s   |
 
+Don't believe the numbers? Download LasiBench and stress-test the engine on your own hardware! 
+[LasiBench.jar](https://github.com/GarrisonMoore/LasiLog/releases/download/1.0.1/LasiBench.jar) (v1.0.1)
 ---
 
 # Getting Started
 
-To begin using LasiLog, follow these steps:\n
-**1. Download and Launch Executable**
+---
+
+### **1. Download and Launch Executable**
 
 Download the latest version: [LasiLogProcessor.jar](https://github.com/GarrisonMoore/LasiLog/releases/download/1.0.1/LasiLogProcessor.jar)
 
-**2. Launch via Command Line**
+### **2. Launch via Command Line**
 
 *   **Standard execution with file selector:**
     ```bash
@@ -121,5 +137,5 @@ Incoming data is processed through `CategorizationMaster.java` to automatically 
 # Future Deployment Roadmap
 
 *   **DECRYPTOR INTEGRATION:** Activation of the `DecryptorMaster.java` interface for handling encrypted or obfuscated log payloads.
-*   **ADVANCED HEURISTICS:** Refined pattern recognition for proprietary industrial and medical data formats.
+*   **INTELLIGENT HEURISTICS:** Refined pattern recognition for proprietary industrial and medical data formats.
 *   **NETWORK TOPOLOGY VIEW:** Visual mapping of log frequency per-host to identify anomaly spikes.
